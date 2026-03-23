@@ -4,18 +4,24 @@ plugins {
 
 android {
     namespace 'com.group27.watchyourwallet'
-    compileSdk {
-        version = release(36)
+    compileSdk 34
+
+    buildFeatures {
+        buildConfig true
     }
 
     defaultConfig {
         applicationId "com.group27.watchyourwallet"
         minSdk 24
-        targetSdk 36
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+        buildConfigField "String", "MONGODB_URI", "\"${properties.getProperty('MONGODB_URI')}\""
     }
 
     buildTypes {

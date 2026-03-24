@@ -3,13 +3,9 @@ package com.group27.watchyourwallet.api;
 import com.group27.watchyourwallet.BuildConfig;
 import android.graphics.Bitmap;
 import android.util.Base64;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

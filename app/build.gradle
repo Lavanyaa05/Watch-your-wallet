@@ -75,4 +75,7 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.espresso:espresso-core:3.5.1'
+
+    // MongoDB Driver
+    implementation 'org.mongodb:mongodb-driver-sync:4.11.0'
 }

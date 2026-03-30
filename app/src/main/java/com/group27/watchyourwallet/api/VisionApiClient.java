@@ -88,17 +88,33 @@ public class VisionApiClient {
     }
 
     private String parseResponse(String responseBody) throws Exception {
-        //convert the response string into a json object to use it like a dictionary
+        // Convert raw API response string into JSON object (like a dictionary)
         JSONObject json = new JSONObject(responseBody);
-        //responses is the key in the dictionary
+
+        // "responses" is the main array returned by Google Vision API
         JSONArray responses = json.getJSONArray("responses");
-        //only one image sent so first item in the array would be what we need
-        //vision api always puts the complete text at index 0, then each individual word after that.
+
+        // Since we only sent ONE image, we take the first response
         JSONObject firstResponse = responses.getJSONObject(0);
-        //Gets the detected texts in the textAnnotations array from the response
+
+        // Sometimes Vision API may NOT detect any text
+        // So we check if "textAnnotations" exists first to avoid crashing
+        if (!firstResponse.has("textAnnotations")) {
+            return "No text detected";
+        }
+
+        // Get the array of detected text blocks
         JSONArray textAnnotations = firstResponse.getJSONArray("textAnnotations");
+
+        //  check if array is empty
+        if (textAnnotations.length() == 0) {
+            return "No text detected";
+        }
+
+        // The FIRST item (index 0) always contains the FULL extracted text
         JSONObject firstAnnotation = textAnnotations.getJSONObject(0);
-        //description value is the actual text vision api reads from the receipt
+
+        // "description" field = the actual OCR text from the receipt
         return firstAnnotation.getString("description");
     }
 

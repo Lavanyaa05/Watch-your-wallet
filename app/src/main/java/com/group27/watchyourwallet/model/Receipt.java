@@ -21,7 +21,7 @@ public class Receipt {
     }
 
     // getters and setters
-    public String getReceiptIDId() { return receiptID; }
+    public String getReceiptID() { return receiptID; }
     public void setReceiptID(String receiptID) { this.receiptID = receiptID; }
     public String getStoreName() { return storeName; }
     public void setStoreName(String storeName) { this.storeName = storeName; }

@@ -20,6 +20,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.group27.watchyourwallet.api.VisionApiClient;
+import com.group27.watchyourwallet.model.CategoryClassifier;
+import com.group27.watchyourwallet.model.Receipt;
+import com.group27.watchyourwallet.model.ReceiptParser;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -84,8 +87,17 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     //MainActivity connects to your OCR class
                     String extractedText = visionApiClient.extractTextFromImage(finalBitmap);
+                    CategoryClassifier classifier = new CategoryClassifier(MainActivity.this);
+                    Receipt receipt = ReceiptParser.parseReceipt(extractedText, "user1", classifier);
 
-                    runOnUiThread(() -> resultTextView.setText(extractedText));
+                    // display parsed result
+                    runOnUiThread(() -> {
+                        String result = "Store: " + receipt.getStoreName() + "\n" +
+                                "Amount: $" + receipt.getAmount() + "\n" +
+                                "Category: " + receipt.getCategory() + "\n" +
+                                "Date: " + receipt.getDate();
+                        resultTextView.setText(result);
+                    });
 
                 } catch (Exception e) {
                     e.printStackTrace();

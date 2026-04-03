@@ -54,7 +54,7 @@ public class ReceiptParser {
     }
 
     public String getDate() {
-        Pattern fullYear = Pattern.compile("\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{4}");
+        Pattern fullYear = Pattern.compile( "\\b(\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4})\\b");
         Matcher matcher = fullYear.matcher(rawText);
         if (matcher.find()) return matcher.group();
 
@@ -79,6 +79,6 @@ public class ReceiptParser {
                 + " | Date: " + date
                 + " | Category: " + category);
 
-        return new Receipt(storeName, amount, category, date, userId);
+        return new Receipt(storeName, amount, category, date, userId, rawText);
     }
 }

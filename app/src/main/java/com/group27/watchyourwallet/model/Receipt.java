@@ -7,17 +7,19 @@ public class Receipt {
     private String category;
     private String date;
     private String userID;
+    private String rawText;
 
     // default empty constructor
     public Receipt() {}
 
     // full constructor
-    public Receipt (String storeName, double amount, String category, String date, String userID) {
+    public Receipt (String storeName, double amount, String category, String date, String userID, String rawText) {
         this.storeName = storeName;
         this.amount = amount;
         this.category = category;
         this.date = date;
         this.userID = userID;
+        this.rawText = rawText;
     }
 
     // getters and setters
@@ -37,4 +39,7 @@ public class Receipt {
 
     public String getUserId() { return userID; }
     public void setUserId(String userId) { this.userID = userId; }
+
+    public String getRawText() { return rawText; }
+    public void setRawText(String rawText) { this.rawText = rawText; }
 }

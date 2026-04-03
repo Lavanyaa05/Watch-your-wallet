@@ -42,6 +42,8 @@ public class VisionApiClient {
         //gets reply
         String responseBody = response.body().string();
 
+        android.util.Log.d("VisionAPI", "Response: " + responseBody);
+
         return parseResponse(responseBody);
 
     }

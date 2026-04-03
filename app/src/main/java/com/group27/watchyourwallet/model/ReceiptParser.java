@@ -11,9 +11,16 @@ public class ReceiptParser {
         String[] lines = rawText.split("\\n");
         for (String line : lines) {
             line = line.trim();
-            if (!line.isEmpty() && line.length() > 2) {
-                return line;
-            }
+
+            if (line.isEmpty()) continue;
+            if (line.matches("\\d+:\\d+")) continue;
+            if (line.matches("\\d+")) continue;
+            if (line.length() < 3) continue;
+            if (line.startsWith("$")) continue;
+            if (line.matches(".*\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2,5}.*")) continue;
+
+            android.util.Log.d("Parser", "Store name found: " + line);
+            return line;
         }
         return "Unknown Store";
     }
@@ -21,7 +28,6 @@ public class ReceiptParser {
     public static double extractAmount(String rawText) {
         if (rawText == null || rawText.isEmpty()) return 0.0;
 
-        // First look for "total" keyword
         String[] lines = rawText.toLowerCase().split("\\n");
         for (String line : lines) {
             if (line.contains("total") || line.contains("amount")
@@ -50,11 +56,15 @@ public class ReceiptParser {
     public static String extractDate(String rawText) {
         if (rawText == null || rawText.isEmpty()) return "Unknown Date";
 
-        Pattern pattern = Pattern.compile(
-                "\\d{1,2}[/\\-.}]\\d{1,2}[/\\-.}]\\d{2,4}"
-        );
-        Matcher matcher = pattern.matcher(rawText);
+        // Try to find a date with 4-digit year first (more specific)
+        Pattern fullYear = Pattern.compile("\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{4}");
+        Matcher matcher = fullYear.matcher(rawText);
         if (matcher.find()) return matcher.group();
+
+        // Fallback: 2-digit year
+        Pattern shortYear = Pattern.compile("\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2}");
+        Matcher matcher2 = shortYear.matcher(rawText);
+        if (matcher2.find()) return matcher2.find() ? matcher2.group() : "Unknown Date";
 
         return "Unknown Date";
     }
@@ -65,6 +75,9 @@ public class ReceiptParser {
         double amount = extractAmount(rawText);
         String date = extractDate(rawText);
         String category = classifier.classify(storeName);
+
+        android.util.Log.d("Parser", "Parsed - Store: " + storeName
+                + " Amount: " + amount + " Date: " + date + " Category: " + category);
 
         return new Receipt(storeName, amount, category, date, userId);
     }

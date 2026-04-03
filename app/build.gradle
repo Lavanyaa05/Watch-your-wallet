@@ -13,6 +13,12 @@ android {
         buildConfig true
     }
 
+    packaging {
+        resources {
+            excludes += ['META-INF/native-image/org.mongodb/bson/native-image.properties']
+        }
+    }
+
     defaultConfig {
         applicationId "com.group27.watchyourwallet"
         minSdk 24
@@ -40,8 +46,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 

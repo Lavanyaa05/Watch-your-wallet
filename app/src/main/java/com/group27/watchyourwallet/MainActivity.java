@@ -18,12 +18,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.group27.watchyourwallet.api.OpenAIService;
 import com.group27.watchyourwallet.api.VisionApiClient;
-import com.group27.watchyourwallet.model.Receipt;
 import com.group27.watchyourwallet.model.ReceiptParser;
-import com.group27.watchyourwallet.repository.ReceiptRepository;
-import com.group27.watchyourwallet.BuildConfig;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -31,10 +27,9 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button scanButton;
+    private Button btnGallery;
     private TextView resultTextView;
     private VisionApiClient visionApiClient;
-    private ReceiptRepository repository;
     private ExecutorService executorService;
 
     private final ActivityResultLauncher<String> pickImageLauncher =
@@ -58,14 +53,13 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        scanButton = findViewById(R.id.buttonToTakePhoto);
+        btnGallery = findViewById(R.id.btnGallery);
         resultTextView = findViewById(R.id.textViewResult);
 
         visionApiClient = new VisionApiClient();
-        repository = new ReceiptRepository(BuildConfig.MONGODB_URI);
         executorService = Executors.newSingleThreadExecutor();
 
-        scanButton.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+        btnGallery.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
     }
 
     private void processSelectedImage(Uri imageUri) {
@@ -86,35 +80,12 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     String extractedText = visionApiClient.extractTextFromImage(finalBitmap);
 
-                    // Parse receipt
-                    ReceiptParser parser = new ReceiptParser(extractedText);
-
-                    // Use OpenAI for categorisation
-                    OpenAIService openAIService = new OpenAIService();
-                    Receipt receipt = parser.toReceipt("user1", openAIService);
-
-                    // Save to MongoDB
-                    repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
-                        @Override
-                        public void onSuccess() {
-                            runOnUiThread(() -> {
-                                String result = "✓ Saved!\n\n" +
-                                        "Store: " + receipt.getStoreName() + "\n" +
-                                        "Amount: $" + receipt.getAmount() + "\n" +
-                                        "Category: " + receipt.getCategory() + "\n" +
-                                        "Date: " + receipt.getDate();
-                                resultTextView.setText(result);
-                            });
-                        }
-                        @Override
-                        public void onFailure(String error) {
-                            runOnUiThread(() ->
-                                    resultTextView.setText("Parsed but not saved: " + error + "\n\n" +
-                                            "Store: " + receipt.getStoreName() + "\n" +
-                                            "Amount: $" + receipt.getAmount() + "\n" +
-                                            "Category: " + receipt.getCategory() + "\n" +
-                                            "Date: " + receipt.getDate()));
-                        }
+                    runOnUiThread(() -> {
+                        ReceiptParser parser = new ReceiptParser(extractedText);
+                        String result = "Store: " + parser.getStoreName() + "\n" +
+                                "Date: "  + parser.getDate()      + "\n" +
+                                "Total: " + parser.getTotal();
+                        resultTextView.setText(result);
                     });
 
                 } catch (Exception e) {
@@ -134,6 +105,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
-        repository.close();
     }
 }

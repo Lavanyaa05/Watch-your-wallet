@@ -1,15 +1,11 @@
 package com.group27.watchyourwallet.model;
 
-import android.util.Log;
-import com.group27.watchyourwallet.api.OpenAIService;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
 public class ReceiptParser {
 
-    private static final String TAG = "ReceiptParser";
-    private String rawText;
     private String[] lines;
+    private String rawText;
 
     public ReceiptParser(String rawText) {
         this.rawText = rawText;
@@ -19,66 +15,64 @@ public class ReceiptParser {
     public String getStoreName() {
         for (String line : lines) {
             line = line.trim();
-            if (line.isEmpty()) continue;
-            if (line.matches("\\d+:\\d+")) continue;
-            if (line.matches("[\\d]+")) continue;
-            if (line.length() < 3) continue;
-            if (line.startsWith("$")) continue;
-            if (line.matches(".*\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2,5}.*")) continue;
-            Log.d(TAG, "Store name found: " + line);
-            return line;
-        }
-        return "Unknown Store";
-    }
-
-    public double getAmount() {
-        for (String line : lines) {
-            String lower = line.toLowerCase();
-            if (lower.contains("total") || lower.contains("amount")
-                    || lower.contains("subtotal")) {
-                Pattern pattern = Pattern.compile("\\d+[.,]\\d{2}");
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find()) {
-                    return Double.parseDouble(matcher.group().replace(",", "."));
-                }
+            // Must have more than 2 chars AND contain at least one letter
+            if (!line.isEmpty() && line.length() > 2 && line.matches(".*[a-zA-Z].*")) {
+                return line;
             }
         }
-        double largest = 0.0;
-        Pattern pattern = Pattern.compile("\\d+[.,]\\d{2}");
-        Matcher matcher = pattern.matcher(rawText);
-        while (matcher.find()) {
-            double value = Double.parseDouble(matcher.group().replace(",", "."));
-            if (value > largest) largest = value;
+        return "Unknown";
+    }
+
+    public String getTotal() {
+        // First try to find a line with "total" keyword
+        Pattern totalPattern = Pattern.compile(
+                "(?i)(grand total|total due|amount due|balance due|total)[^\\d]*(\\d+\\.\\d{2})"
+        );
+        Matcher totalMatcher = totalPattern.matcher(rawText);
+        double lastMatch = -1;
+        while (totalMatcher.find()) {
+            lastMatch = Double.parseDouble(totalMatcher.group(2));
         }
-        return largest;
+
+        // If total keyword found, return it
+        if (lastMatch != -1) {
+            return "$" + lastMatch;
+        }
+
+        // Fallback: find the largest dollar amount on any line
+        Pattern dollarPattern = Pattern.compile("\\$\\s*(\\d+\\.\\d{2})");
+        Matcher dollarMatcher = dollarPattern.matcher(rawText);
+        double largestAmount = -1;
+        while (dollarMatcher.find()) {
+            double amount = Double.parseDouble(dollarMatcher.group(1));
+            if (amount > largestAmount) {
+                largestAmount = amount;
+            }
+        }
+
+        return largestAmount == -1 ? "Unknown" : "$" + largestAmount;
     }
 
     public String getDate() {
-        Pattern fullYear = Pattern.compile( "\\b(\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4})\\b");
-        Matcher matcher = fullYear.matcher(rawText);
-        if (matcher.find()) return matcher.group();
+        // Format 1: 03/28/2026 or 03-28-2026
+        Pattern numericDate = Pattern.compile(
+                "\\b(\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4})\\b"
+        );
 
-        Pattern shortYear = Pattern.compile("\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2}");
-        Matcher matcher2 = shortYear.matcher(rawText);
-        if (matcher2.find()) return matcher2.group();
+        // Format 2: 11 Jan 2026 or 11 January 2026
+        Pattern writtenDate = Pattern.compile(
+                "(?i)\\b(\\d{1,2}\\s+" +
+                        "(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|" +
+                        "jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)" +
+                        "\\s+\\d{2,4})\\b"
+        );
 
-        return "Unknown Date";
-    }
+        Matcher m1 = numericDate.matcher(rawText);
+        if (m1.find()) return m1.group(1);
 
-    public Receipt toReceipt(String userId, OpenAIService openAIService) {
-        String storeName = getStoreName();
-        double amount = getAmount();
-        String date = getDate();
+        Matcher m2 = writtenDate.matcher(rawText);
+        if (m2.find()) return m2.group(1);
 
-        Log.d(TAG, "Sending to OpenAI: " + storeName);
-        String category = openAIService.categorise(storeName);
-        Log.d(TAG, "Category received: " + category);
-
-        Log.d(TAG, "Final - Store: " + storeName
-                + " | Amount: " + amount
-                + " | Date: " + date
-                + " | Category: " + category);
-
-        return new Receipt(storeName, amount, category, date, userId, rawText);
+        return "Unknown";
     }
 }

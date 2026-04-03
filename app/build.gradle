@@ -25,6 +25,7 @@ android {
         Properties properties = new Properties()
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
         buildConfigField "String", "MONGODB_URI", "\"${properties.getProperty('MONGODB_URI')}\""
+        buildConfigField "String", "VISION_API_KEY", "\"${properties.getProperty('VISION_API_KEY')}\""
     }
 
     buildTypes {

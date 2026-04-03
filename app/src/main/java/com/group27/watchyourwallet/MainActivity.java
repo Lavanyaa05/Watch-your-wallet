@@ -1,6 +1,5 @@
 package com.group27.watchyourwallet;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -19,10 +18,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.group27.watchyourwallet.api.OpenAIService;
 import com.group27.watchyourwallet.api.VisionApiClient;
-import com.group27.watchyourwallet.model.CategoryClassifier;
 import com.group27.watchyourwallet.model.Receipt;
 import com.group27.watchyourwallet.model.ReceiptParser;
+import com.group27.watchyourwallet.repository.ReceiptRepository;
+import com.group27.watchyourwallet.BuildConfig;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private Button scanButton;
     private TextView resultTextView;
     private VisionApiClient visionApiClient;
+    private ReceiptRepository repository;
     private ExecutorService executorService;
 
     private final ActivityResultLauncher<String> pickImageLauncher =
@@ -59,14 +61,11 @@ public class MainActivity extends AppCompatActivity {
         scanButton = findViewById(R.id.buttonToTakePhoto);
         resultTextView = findViewById(R.id.textViewResult);
 
-        //creates the helper
         visionApiClient = new VisionApiClient();
+        repository = new ReceiptRepository(BuildConfig.MONGODB_URI);
         executorService = Executors.newSingleThreadExecutor();
 
-        //wait for button click
-        scanButton.setOnClickListener(v -> {
-            pickImageLauncher.launch("image/*");
-        });
+        scanButton.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
     }
 
     private void processSelectedImage(Uri imageUri) {
@@ -85,18 +84,37 @@ public class MainActivity extends AppCompatActivity {
             Bitmap finalBitmap = bitmap;
             executorService.execute(() -> {
                 try {
-                    //MainActivity connects to your OCR class
                     String extractedText = visionApiClient.extractTextFromImage(finalBitmap);
-                    CategoryClassifier classifier = new CategoryClassifier(MainActivity.this);
-                    Receipt receipt = ReceiptParser.parseReceipt(extractedText, "user1", classifier);
 
-                    // display parsed result
-                    runOnUiThread(() -> {
-                        String result = "Store: " + receipt.getStoreName() + "\n" +
-                                "Amount: $" + receipt.getAmount() + "\n" +
-                                "Category: " + receipt.getCategory() + "\n" +
-                                "Date: " + receipt.getDate();
-                        resultTextView.setText(result);
+                    // Parse receipt
+                    ReceiptParser parser = new ReceiptParser(extractedText);
+
+                    // Use OpenAI for categorisation
+                    OpenAIService openAIService = new OpenAIService();
+                    Receipt receipt = parser.toReceipt("user1", openAIService);
+
+                    // Save to MongoDB
+                    repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
+                        @Override
+                        public void onSuccess() {
+                            runOnUiThread(() -> {
+                                String result = "✓ Saved!\n\n" +
+                                        "Store: " + receipt.getStoreName() + "\n" +
+                                        "Amount: $" + receipt.getAmount() + "\n" +
+                                        "Category: " + receipt.getCategory() + "\n" +
+                                        "Date: " + receipt.getDate();
+                                resultTextView.setText(result);
+                            });
+                        }
+                        @Override
+                        public void onFailure(String error) {
+                            runOnUiThread(() ->
+                                    resultTextView.setText("Parsed but not saved: " + error + "\n\n" +
+                                            "Store: " + receipt.getStoreName() + "\n" +
+                                            "Amount: $" + receipt.getAmount() + "\n" +
+                                            "Category: " + receipt.getCategory() + "\n" +
+                                            "Date: " + receipt.getDate()));
+                        }
                     });
 
                 } catch (Exception e) {
@@ -116,5 +134,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
+        repository.close();
     }
 }

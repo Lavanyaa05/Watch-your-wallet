@@ -32,19 +32,16 @@ android {
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
         buildConfigField "String", "MONGODB_URI", "\"${properties.getProperty('MONGODB_URI')}\""
         buildConfigField "String", "VISION_API_KEY", "\"${properties.getProperty('VISION_API_KEY')}\""
+        buildConfigField "String", "OPENAI_API_KEY", "\"${properties.getProperty('OPENAI_API_KEY')}\""
     }
 
     buildTypes {
-        debug {
-            buildConfigField "String", "VISION_API_KEY", "\"${localProperties['VISION_API_KEY']}\""
-        }
-
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "VISION_API_KEY", "\"${localProperties['VISION_API_KEY']}\""
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17

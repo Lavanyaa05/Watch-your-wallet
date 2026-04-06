@@ -3,7 +3,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Body
 import retrofit2.http.Path
-
+import com.group27.watchyourwallet.model.Receipt
 interface ReceiptApi {
 
     // GET all receipts for a user

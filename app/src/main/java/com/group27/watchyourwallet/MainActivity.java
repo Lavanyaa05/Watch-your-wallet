@@ -1,5 +1,6 @@
 package com.group27.watchyourwallet;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -94,27 +95,13 @@ public class MainActivity extends AppCompatActivity {
                     Receipt receipt = parser.toReceipt("user1", openAIService);
 
                     // Save to MongoDB
-                    repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
-                        @Override
-                        public void onSuccess() {
-                            runOnUiThread(() -> {
-                                String result = "✓ Saved!\n\n" +
-                                        "Store: " + receipt.getStoreName() + "\n" +
-                                        "Amount: $" + receipt.getAmount() + "\n" +
-                                        "Category: " + receipt.getCategory() + "\n" +
-                                        "Date: " + receipt.getDate();
-                                resultTextView.setText(result);
-                            });
-                        }
-                        @Override
-                        public void onFailure(String error) {
-                            runOnUiThread(() ->
-                                    resultTextView.setText("Parsed but not saved: " + error + "\n\n" +
-                                            "Store: " + receipt.getStoreName() + "\n" +
-                                            "Amount: $" + receipt.getAmount() + "\n" +
-                                            "Category: " + receipt.getCategory() + "\n" +
-                                            "Date: " + receipt.getDate()));
-                        }
+                    runOnUiThread(() -> {
+                        Intent intent = new Intent(MainActivity.this, ReviewReceiptActivity.class);
+                        intent.putExtra("storeName", receipt.getStoreName());
+                        intent.putExtra("amount", String.valueOf(receipt.getAmount()));
+                        intent.putExtra("category", receipt.getCategory());
+                        intent.putExtra("date", receipt.getDate());
+                        startActivity(intent);
                     });
 
                 } catch (Exception e) {

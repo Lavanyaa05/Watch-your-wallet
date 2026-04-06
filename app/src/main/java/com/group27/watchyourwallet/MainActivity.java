@@ -1,5 +1,8 @@
 package com.group27.watchyourwallet;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -14,6 +17,8 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -41,6 +46,31 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+    private final ActivityResultLauncher<Intent> cameraLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
+                    // Convert bitmap to uri and process
+                    resultTextView.setText("Scanning receipt...");
+                    executorService.execute(() -> {
+                        try {
+                            String extractedText = visionApiClient.extractTextFromImage(photo);
+                            runOnUiThread(() -> {
+                                ReceiptParser parser = new ReceiptParser(extractedText);
+                                String result2 = "Store: " + parser.getStoreName() + "\n" +
+                                        "Date: "  + parser.getDate()      + "\n" +
+                                        "Total: " + parser.getTotal();
+                                resultTextView.setText(result2);
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            runOnUiThread(() ->
+                                    resultTextView.setText("OCR failed: " + e.getMessage()));
+                        }
+                    });
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
         executorService = Executors.newSingleThreadExecutor();
 
         btnGallery.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+
+        Button buttonToTakePhoto = findViewById(R.id.btnTakePhoto);
+        buttonToTakePhoto.setOnClickListener(v -> openCamera());
     }
 
     private void processSelectedImage(Uri imageUri) {
@@ -99,6 +132,32 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             resultTextView.setText("Failed to load image");
         }
+    }
+
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchCamera();
+        } else{
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                launchCamera();
+            } else {
+                Toast.makeText(this, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void launchCamera() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        cameraLauncher.launch(intent);
     }
 
     @Override

@@ -103,11 +103,14 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         ReceiptParser parser = new ReceiptParser(extractedText);
                         OpenAIService category = new OpenAIService();
-                        String result = "Store: " + parser.getStoreName() + "\n" +
-                                "Date: "  + parser.getDate()      + "\n" +
-                                "Total: " + parser.getTotal() + "\n" +
-                                "Category: " + category.categorise(extractedText);
-                        resultTextView.setText(result);
+
+                        Intent intent = new Intent(MainActivity.this, ReviewReceiptActivity.class);
+                        intent.putExtra("storeName", parser.getStoreName());
+                        intent.putExtra("amount", String.valueOf(parser.getTotal()));
+                        intent.putExtra("category", category.categorise(extractedText));
+                        intent.putExtra("date", parser.getDate());
+                        resultTextView.setText("Scan your receipt");
+                        startActivity(intent);
                     });
 
                 } catch (Exception e) {

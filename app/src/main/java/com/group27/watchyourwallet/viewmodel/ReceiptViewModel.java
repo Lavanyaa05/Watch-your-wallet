@@ -8,7 +8,7 @@ import com.group27.watchyourwallet.BuildConfig;
 import com.group27.watchyourwallet.model.CategoryClassifier;
 import com.group27.watchyourwallet.model.Receipt;
 // import com.group27.watchyourwallet.model.ReceiptParser;
-import com.group27.watchyourwallet.repository.ReceiptRepository;
+import com.group27.watchyourwallet.repository.*;
 import java.util.List;
 
 public class ReceiptViewModel extends AndroidViewModel {
@@ -95,6 +95,5 @@ public class ReceiptViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        repository.close();
     }
 }

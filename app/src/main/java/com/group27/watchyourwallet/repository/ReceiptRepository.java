@@ -1,85 +1,57 @@
 package com.group27.watchyourwallet.repository;
 
-import android.util.Log;
 import com.group27.watchyourwallet.model.Receipt;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
-import java.util.ArrayList;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import java.util.List;
+import com.group27.watchyourwallet.api.RetrofitClient;
+import com.group27.watchyourwallet.api.ReceiptApi;
 
 public class ReceiptRepository {
 
-    private static final String TAG = "ReceiptRepository";
-    private MongoClient mongoClient;
-    private MongoCollection<Document> receiptsCollection;
+    private ReceiptApi apiService;
 
-    public ReceiptRepository(String mongoUri) {
-        try {
-            // Connect synchronously so collection is ready immediately
-            mongoClient = MongoClients.create(mongoUri);
-            MongoDatabase database = mongoClient.getDatabase("watchyourwallet");
-            receiptsCollection = database.getCollection("receipts");
-            Log.d(TAG, "MongoDB connected successfully");
-        } catch (Exception e) {
-            Log.e(TAG, "MongoDB connection failed: " + e.getMessage());
-        }
+    public ReceiptRepository(String mongodbUri) {
+        apiService = RetrofitClient.getClient().create(ReceiptApi.class);
     }
 
     public void saveReceipt(Receipt receipt, OnCompleteListener listener) {
-        new Thread(() -> {
-            try {
-                if (receiptsCollection == null) {
-                    Log.e(TAG, "Collection is null — connection may have failed");
-                    if (listener != null) listener.onFailure("Database not connected");
-                    return;
+        apiService.saveReceipt(receipt).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    if (listener != null) listener.onSuccess();
+                } else {
+                    if (listener != null) listener.onFailure("Error code: " + response.code());
                 }
-
-                Document doc = new Document()
-                        .append("storeName", receipt.getStoreName())
-                        .append("amount", receipt.getAmount())
-                        .append("category", receipt.getCategory())
-                        .append("date", receipt.getDate())
-                        .append("userId", receipt.getUserId())
-                        .append("rawText", receipt.getRawText());
-
-                receiptsCollection.insertOne(doc);
-                Log.d(TAG, "Receipt saved successfully");
-                if (listener != null) listener.onSuccess();
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to save: " + e.getMessage());
-                if (listener != null) listener.onFailure(e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (listener != null) listener.onFailure(t.getMessage());
+            }
+        });
     }
 
     public void getReceipts(String userId, OnReceiptsLoadedListener listener) {
-        new Thread(() -> {
-            try {
-                List<Receipt> receipts = new ArrayList<>();
-                Document query = new Document("userId", userId);
-
-                for (Document doc : receiptsCollection.find(query)) {
-                    Receipt receipt = new Receipt();
-                    receipt.setReceiptID(doc.getObjectId("_id").toString());
-                    receipt.setStoreName(doc.getString("storeName"));
-                    receipt.setAmount(doc.getDouble("amount"));
-                    receipt.setCategory(doc.getString("category"));
-                    receipt.setDate(doc.getString("date"));
-                    receipt.setUserId(doc.getString("userId"));
-                    receipt.setRawText(doc.getString("rawText"));
-                    receipts.add(receipt);
+        apiService.getReceipts(userId).enqueue(new Callback<List<Receipt>>() {
+            @Override
+            public void onResponse(Call<List<Receipt>> call, Response<List<Receipt>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (listener != null) listener.onReceiptsLoaded(response.body());
+                } else {
+                    if (listener != null) listener.onReceiptsLoaded(null);
                 }
-
-                Log.d(TAG, "Loaded " + receipts.size() + " receipts");
-                if (listener != null) listener.onReceiptsLoaded(receipts);
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to load: " + e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onFailure(Call<List<Receipt>> call, Throwable t) {
+                if (listener != null) listener.onReceiptsLoaded(null);
+            }
+        });
     }
+
 
     public interface OnCompleteListener {
         void onSuccess();
@@ -88,11 +60,5 @@ public class ReceiptRepository {
 
     public interface OnReceiptsLoadedListener {
         void onReceiptsLoaded(List<Receipt> receipts);
-    }
-
-    public void close() {
-        if (mongoClient != null) {
-            mongoClient.close();
-        }
     }
 }

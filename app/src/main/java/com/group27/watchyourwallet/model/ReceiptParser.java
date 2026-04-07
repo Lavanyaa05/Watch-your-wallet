@@ -43,6 +43,7 @@ public class ReceiptParser {
                 }
             }
         }
+
         double largest = 0.0;
         Pattern pattern = Pattern.compile("\\d+[.,]\\d{2}");
         Matcher matcher = pattern.matcher(rawText);

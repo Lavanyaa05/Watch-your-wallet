@@ -21,6 +21,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.group27.watchyourwallet.api.OpenAIService;
 import com.group27.watchyourwallet.api.VisionApiClient;
+import com.group27.watchyourwallet.api.RetrofitClient;
+import com.group27.watchyourwallet.api.ReceiptApi;
 import com.group27.watchyourwallet.model.Receipt;
 import com.group27.watchyourwallet.model.ReceiptParser;
 import com.group27.watchyourwallet.repository.ReceiptRepository;
@@ -121,6 +123,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
-        repository.close();
     }
 }

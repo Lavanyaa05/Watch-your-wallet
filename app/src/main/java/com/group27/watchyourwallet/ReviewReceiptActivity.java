@@ -50,7 +50,7 @@ public class ReviewReceiptActivity extends AppCompatActivity {
             String date      = editDate.getText().toString();
 
             // Saving the data to MongoDB
-            ReceiptRepository repository = new ReceiptRepository(BuildConfig.MONGODB_URI);
+            ReceiptRepository repository = new ReceiptRepository("");
             String userId = "user_1";
 
             // Get raw OCR text passed from MainActivity

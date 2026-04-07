@@ -8,6 +8,9 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.group27.watchyourwallet.model.Receipt;
+import com.group27.watchyourwallet.repository.ReceiptRepository;
+
 public class ReviewReceiptActivity extends AppCompatActivity {
 
     @Override
@@ -46,8 +49,35 @@ public class ReviewReceiptActivity extends AppCompatActivity {
             String category  = editCategory.getSelectedItem().toString();
             String date      = editDate.getText().toString();
 
-            Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show();
-            finish();
+            // Saving the data to MongoDB
+            ReceiptRepository repository = new ReceiptRepository(BuildConfig.MONGODB_URI);
+            String userId = "user_1";
+
+            // Get raw OCR text passed from MainActivity
+            String rawText = getIntent().getStringExtra("rawText");
+            double finalAmount;
+            try {
+                finalAmount = Double.parseDouble(amount.replace("$", ""));
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Invalid amount", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Receipt receipt = new Receipt(storeName, finalAmount, category, date, userId, rawText);
+
+            repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(ReviewReceiptActivity.this, "Receipt saved!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    });
+                }
+                @Override
+                public void onFailure(String error) {
+                    runOnUiThread(() -> Toast.makeText(ReviewReceiptActivity.this, "Failed to save: " + error, Toast.LENGTH_SHORT).show());
+                }
+            });
         });
     }
 }

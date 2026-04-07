@@ -21,11 +21,12 @@ public class OpenAIService {
     }
 
     // Categorises a store name using OpenAI
-    public String categorise(String storeName) {
+    public String categorise(String rawReceiptText) {
+        // Updated prompt: now we give the entire receipt text
         String prompt = "You are a receipt categorisation assistant. " +
-                "Given a store name from a receipt, return ONLY one of these exact categories: " +
+                "Given the full text of a receipt, return ONLY one of these exact categories: " +
                 "Food & Dining, Transport, Beauty & Wellness, Groceries, Shopping, Entertainment, Uncategorised. " +
-                "Store name: \"" + storeName + "\". " +
+                "Receipt text: \"" + rawReceiptText + "\" " +
                 "Reply with just the category name, nothing else. No punctuation, no explanation.";
 
         try {

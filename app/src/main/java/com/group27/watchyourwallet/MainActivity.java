@@ -100,15 +100,20 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     String extractedText = visionApiClient.extractTextFromImage(finalBitmap);
 
-                    runOnUiThread(() -> {
-                        ReceiptParser parser = new ReceiptParser(extractedText);
-                        OpenAIService category = new OpenAIService();
+                    ReceiptParser parser = new ReceiptParser(extractedText);
+                    OpenAIService categoryService = new OpenAIService();
+                    String category = categoryService.categorise(extractedText);
 
+                    String storeName = parser.getStoreName();
+                    String amount = String.valueOf(parser.getTotal());
+                    String date = parser.getDate();
+
+                    runOnUiThread(() -> {
                         Intent intent = new Intent(MainActivity.this, ReviewReceiptActivity.class);
-                        intent.putExtra("storeName", parser.getStoreName());
-                        intent.putExtra("amount", String.valueOf(parser.getTotal()));
-                        intent.putExtra("category", category.categorise(extractedText));
-                        intent.putExtra("date", parser.getDate());
+                        intent.putExtra("storeName", storeName);
+                        intent.putExtra("amount", amount);
+                        intent.putExtra("category", category);
+                        intent.putExtra("date", date);
                         resultTextView.setText("Scan your receipt");
                         startActivity(intent);
                     });

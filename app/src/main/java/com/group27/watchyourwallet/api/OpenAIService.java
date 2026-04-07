@@ -28,7 +28,7 @@ public class OpenAIService {
     public String categorise(String rawReceiptText) {
         String prompt = "You are a receipt categorisation assistant. " +
                 "Given the full text of a receipt, return ONLY one of these exact categories: " +
-                "Food & Dining, Transport, Beauty & Wellness, Groceries, Shopping, Entertainment, Uncategorised.\n\n" +
+                "Food & Dining, Transport, Shopping, Entertainment, Uncategorised.\n\n" +
                 "Receipt text: " + rawReceiptText + "\n\n" +
                 "Reply with ONLY the category name from the list. Do not add anything else.";
 

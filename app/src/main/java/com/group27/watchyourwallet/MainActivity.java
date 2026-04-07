@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         visionApiClient = new VisionApiClient();
         executorService = Executors.newSingleThreadExecutor();
 
-        btnGallery.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+        btnGallery.setOnClickListener(v -> openGallery());
 
         Button buttonToTakePhoto = findViewById(R.id.btnTakePhoto);
         buttonToTakePhoto.setOnClickListener(v -> openCamera());
@@ -149,6 +149,12 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show();
             }
+        } else if (requestCode == 101) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                pickImageLauncher.launch("image/*");
+            } else {
+                Toast.makeText(this, "Gallery permission is needed to upload photos", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -159,6 +165,28 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
         cameraLauncher.launch(intent);
+    }
+
+    private void openGallery() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                    == PackageManager.PERMISSION_GRANTED) {
+                pickImageLauncher.launch("image/*");
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_MEDIA_IMAGES}, 101);
+            }
+        } else {
+            // Android 12 and below
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                pickImageLauncher.launch("image/*");
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 101);
+            }
+        }
     }
 
     @Override

@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -26,6 +27,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.group27.watchyourwallet.api.VisionApiClient;
 import com.group27.watchyourwallet.model.ReceiptParser;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView resultTextView;
     private VisionApiClient visionApiClient;
     private ExecutorService executorService;
+
+    private Uri photoUri;
 
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -48,26 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<Intent> cameraLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
-                    // Convert bitmap to uri and process
-                    resultTextView.setText("Scanning receipt...");
-                    executorService.execute(() -> {
-                        try {
-                            String extractedText = visionApiClient.extractTextFromImage(photo);
-                            runOnUiThread(() -> {
-                                ReceiptParser parser = new ReceiptParser(extractedText);
-                                String result2 = "Store: " + parser.getStoreName() + "\n" +
-                                        "Date: "  + parser.getDate()      + "\n" +
-                                        "Total: " + parser.getTotal();
-                                resultTextView.setText(result2);
-                            });
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            runOnUiThread(() ->
-                                    resultTextView.setText("OCR failed: " + e.getMessage()));
-                        }
-                    });
+                if (result.getResultCode() == RESULT_OK) {
+                    processSelectedImage(photoUri); // use the saved file instead of thumbnail
                 }
             });
 
@@ -156,7 +142,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void launchCamera() {
+        File photoFile = new File(getExternalFilesDir(null), "receipt.jpg");
+        photoUri = FileProvider.getUriForFile(this,
+                getPackageName() + ".fileprovider", photoFile);
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
         cameraLauncher.launch(intent);
     }
 

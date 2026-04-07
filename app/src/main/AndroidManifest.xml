@@ -17,6 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WatchYourWallet"
         android:usesCleartextTraffic="true">
+        <activity android:name=".ReviewReceiptActivity"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

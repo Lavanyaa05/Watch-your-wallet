@@ -22,7 +22,7 @@ public class ReviewReceiptActivity extends AppCompatActivity {
         Button saveButton      = findViewById(R.id.saveButton);
 
         // set up dropdown options
-        String[] categories = {"Food & Dining", "Transport", "Shopping", "Entertainment", "Beauty & Wellness"};
+        String[] categories = {"Food & Dining", "Transport", "Shopping", "Entertainment", "Beauty & Wellness", "Uncategorised"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         editCategory.setAdapter(adapter);

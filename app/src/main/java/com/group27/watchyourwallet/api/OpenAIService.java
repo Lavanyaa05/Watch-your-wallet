@@ -109,6 +109,7 @@ public class OpenAIService {
         return "Uncategorised";
     }
 
+    /*
     public String extractFilters(String userQuery) {
 
         String prompt = "You are a financial assistant. " +
@@ -134,4 +135,6 @@ public class OpenAIService {
             return "{}";
         }
     }
+
+     */
 }

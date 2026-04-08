@@ -20,6 +20,6 @@ public interface ReceiptApi {
     Call<Void> saveReceipt(@Body Receipt receipt);
 
     // POST a question to chatbot
-    @POST("receipts/filter")
-    Call<List<Receipt>> filterReceipts(@Body Map<String, String> filters);
+    //@POST("receipts/filter")
+    //Call<List<Receipt>> filterReceipts(@Body Map<String, String> filters);
 }

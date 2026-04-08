@@ -28,11 +28,12 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file('local.properties').newDataInputStream())
-        buildConfigField "String", "MONGODB_URI", "\"${properties.getProperty('MONGODB_URI')}\""
-        buildConfigField "String", "VISION_API_KEY", "\"${properties.getProperty('VISION_API_KEY')}\""
-        buildConfigField "String", "OPENAI_API_KEY", "\"${properties.getProperty('OPENAI_API_KEY')}\""
+        Properties localProps = new Properties()
+        localProps.load(project.rootProject.file('local.properties').newDataInputStream())
+
+        buildConfigField "String", "MONGODB_URI", "\"${localProps.getProperty('MONGODB_URI')}\""
+        buildConfigField "String", "VISION_API_KEY", "\"${localProps.getProperty('VISION_API_KEY')}\""
+        buildConfigField "String", "OPENAI_API_KEY", "\"${localProps.getProperty('OPENAI_API_KEY')}\""
     }
 
     buildTypes {

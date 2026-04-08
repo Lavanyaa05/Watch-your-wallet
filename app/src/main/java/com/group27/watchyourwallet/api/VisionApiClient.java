@@ -1,11 +1,15 @@
 package com.group27.watchyourwallet.api;
 
-import com.group27.watchyourwallet.BuildConfig;
 import android.graphics.Bitmap;
 import android.util.Base64;
+
+import com.group27.watchyourwallet.BuildConfig;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
+
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -13,7 +17,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class VisionApiClient {
-    private static final String API_KEY = BuildConfig.VISION_API_KEY;
+    private static final String API_KEY;
+
+    static {
+        API_KEY = BuildConfig.VISION_API_KEY;
+    }
+
     private static final String API_URL = "https://vision.googleapis.com/v1/images:annotate?key=" + API_KEY;
     private OkHttpClient client;
 

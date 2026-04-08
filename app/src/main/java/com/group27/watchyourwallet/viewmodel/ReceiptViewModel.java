@@ -4,8 +4,6 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-import com.group27.watchyourwallet.BuildConfig;
-import com.group27.watchyourwallet.model.CategoryClassifier;
 import com.group27.watchyourwallet.model.Receipt;
 // import com.group27.watchyourwallet.model.ReceiptParser;
 import com.group27.watchyourwallet.repository.*;
@@ -14,7 +12,7 @@ import java.util.List;
 public class ReceiptViewModel extends AndroidViewModel {
 
     private ReceiptRepository repository;
-    private CategoryClassifier classifier;
+    //private CategoryClassifier classifier;
     private MutableLiveData<List<Receipt>> receiptsLiveData;
     private MutableLiveData<Receipt> scannedReceiptLiveData;
     private MutableLiveData<String> errorLiveData;
@@ -24,8 +22,8 @@ public class ReceiptViewModel extends AndroidViewModel {
 
     public ReceiptViewModel(@NonNull Application application) {
         super(application);
-        repository = new ReceiptRepository(BuildConfig.MONGODB_URI);
-        classifier = new CategoryClassifier(application);
+        repository = new ReceiptRepository("");
+        //classifier = new CategoryClassifier(application);
         receiptsLiveData = new MutableLiveData<>();
         scannedReceiptLiveData = new MutableLiveData<>();
         errorLiveData = new MutableLiveData<>();

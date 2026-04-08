@@ -108,4 +108,30 @@ public class OpenAIService {
 
         return "Uncategorised";
     }
+
+    public String extractFilters(String userQuery) {
+
+        String prompt = "You are a financial assistant. " +
+                "Extract filters from this user query and return ONLY JSON. " +
+                "Fields: storeName, category, date. " +
+
+                "Categories must be one of: Food & Dining, Transport, Beauty & Wellness, Groceries, Shopping, Entertainment. " +
+
+                "If not present, return null.\n\n" +
+
+                "Examples:\n" +
+                "Input: Show me Starbucks purchases\n" +
+                "Output: {\"storeName\":\"Starbucks\",\"category\":null,\"date\":null}\n\n" +
+
+                "Input: food last week\n" +
+                "Output: {\"storeName\":null,\"category\":\"Food & Dining\",\"date\":\"last_week\"}\n\n" +
+
+                "User query: " + userQuery;
+
+        try {
+            return makeRequest(prompt, 100, 0.0);
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
 }

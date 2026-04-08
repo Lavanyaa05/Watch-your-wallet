@@ -7,6 +7,7 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import java.util.List;
+import java.util.Map;
 
 public interface ReceiptApi {
 
@@ -17,4 +18,8 @@ public interface ReceiptApi {
     // POST a new receipt
     @POST("receipts")
     Call<Void> saveReceipt(@Body Receipt receipt);
+
+    // POST a question to chatbot
+    @POST("receipts/filter")
+    Call<List<Receipt>> filterReceipts(@Body Map<String, String> filters);
 }

@@ -55,16 +55,13 @@ public class ReviewReceiptActivity extends AppCompatActivity {
 
             // Get raw OCR text passed from MainActivity
             String rawText = getIntent().getStringExtra("rawText");
-            double finalAmount;
-            try {
-                finalAmount = Double.parseDouble(amount.replace("$", ""));
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "Invalid amount", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Receipt receipt = new Receipt(storeName, finalAmount, category, date, userId, rawText);
-
+            Receipt receipt = Receipt.fromInputs(
+                    storeName,
+                    amount,
+                    category,
+                    date,
+                    rawText
+            );
             repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
                 @Override
                 public void onSuccess() {

@@ -5,6 +5,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import java.util.List;
+import java.util.Map;
+
 import com.group27.watchyourwallet.api.RetrofitClient;
 import com.group27.watchyourwallet.api.ReceiptApi;
 
@@ -23,7 +25,8 @@ public class ReceiptRepository {
                 if (response.isSuccessful()) {
                     if (listener != null) listener.onSuccess();
                 } else {
-                    if (listener != null) listener.onFailure("Error code: " + response.code());
+                    if (listener != null) listener.onFailure("Error code: "
+                            + response.code());
                 }
             }
 
@@ -48,6 +51,24 @@ public class ReceiptRepository {
             @Override
             public void onFailure(Call<List<Receipt>> call, Throwable t) {
                 if (listener != null) listener.onReceiptsLoaded(null);
+            }
+        });
+    }
+
+    public void filterReceipts(Map<String, String> filters, OnReceiptsLoadedListener listener) {
+        apiService.filterReceipts(filters).enqueue(new Callback<List<Receipt>>() {
+            @Override
+            public void onResponse(Call<List<Receipt>> call, Response<List<Receipt>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    listener.onReceiptsLoaded(response.body());
+                } else {
+                    listener.onReceiptsLoaded(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Receipt>> call, Throwable t) {
+                listener.onReceiptsLoaded(null);
             }
         });
     }

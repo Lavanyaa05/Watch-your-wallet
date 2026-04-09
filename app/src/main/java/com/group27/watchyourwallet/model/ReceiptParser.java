@@ -36,7 +36,6 @@ public class ReceiptParser {
             return "$" + lastMatch;
         }
 
-        // Fallback: find the largest dollar amount on any line
         Pattern dollarPattern = Pattern.compile("\\$\\s*(\\d+\\.\\d{2})");
         Matcher dollarMatcher = dollarPattern.matcher(rawText);
         double largestAmount = -1;
@@ -51,12 +50,10 @@ public class ReceiptParser {
     }
 
     public String getDate() {
-        // Format 1: 03/28/2026 or 03-28-2026
         Pattern numericDate = Pattern.compile(
-                "\\b(\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4})\\b"
+                "\\b(\\d{1,4}[/-]\\d{1,2}[/-]\\d{2,4})\\b"
         );
 
-        // Format 2: 11 Jan 2026 or 11 January 2026
         Pattern writtenDate = Pattern.compile(
                 "(?i)\\b(\\d{1,2}\\s+" +
                         "(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|" +

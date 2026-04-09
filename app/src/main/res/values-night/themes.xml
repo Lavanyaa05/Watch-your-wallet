@@ -3,7 +3,7 @@
     <style name="Base.Theme.WatchYourWallet" parent="Theme.Material3.DayNight.NoActionBar">
 
         <!-- Force white status bar even in dark mode -->
-        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:statusBarColor">@color/pastel_purple</item>
 
 
         <!-- Optional: keep theme consistent -->

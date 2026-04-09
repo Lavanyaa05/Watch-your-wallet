@@ -15,7 +15,6 @@ public class ReceiptParser {
     public String getStoreName() {
         for (String line : lines) {
             line = line.trim();
-            // Must have more than 2 chars AND contain at least one letter
             if (!line.isEmpty() && line.length() > 2 && line.matches(".*[a-zA-Z].*")) {
                 return line;
             }

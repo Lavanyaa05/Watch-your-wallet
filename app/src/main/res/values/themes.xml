@@ -2,11 +2,9 @@
 
     <style name="Base.Theme.WatchYourWallet" parent="Theme.Material3.DayNight.NoActionBar">
 
-        <!-- Set status bar to white -->
         <item name="android:statusBarColor">@color/pastel_purple</item>
 
 
-        <!-- Optional: remove purple tint influence -->
         <item name="colorPrimary">@color/pastel_purple</item>
 
     </style>

@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
     private ExecutorService executorService;
     private CameraHelper cameraHelper;
 
-    // Gallery picker
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
@@ -49,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-    // Camera launcher
     private final ActivityResultLauncher<Intent> cameraLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {

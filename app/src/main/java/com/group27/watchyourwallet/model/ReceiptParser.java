@@ -23,7 +23,6 @@ public class ReceiptParser {
     }
 
     public String getTotal() {
-        // First try to find a line with "total" keyword
         Pattern totalPattern = Pattern.compile(
                 "(?i)(grand total|total due|amount due|balance due|total)[^\\d]*(\\d+\\.\\d{2})"
         );
@@ -33,7 +32,6 @@ public class ReceiptParser {
             lastMatch = Double.parseDouble(totalMatcher.group(2));
         }
 
-        // If total keyword found, return it
         if (lastMatch != -1) {
             return "$" + lastMatch;
         }

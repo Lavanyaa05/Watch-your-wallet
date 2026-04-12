@@ -43,7 +43,7 @@ public class ReceiptRepository {
     }
 
     public void getReceipts(String userId, OnReceiptsLoadedListener listener) {
-        apiService.getReceipts(userId).enqueue(new Callback<List<Receipt>>() {
+        apiService.getReceipts().enqueue(new Callback<List<Receipt>>() {
             @Override
             public void onResponse(Call<List<Receipt>> call, Response<List<Receipt>> response) {
                 if (response.isSuccessful() && response.body() != null) {

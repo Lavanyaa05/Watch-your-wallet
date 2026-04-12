@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.group27.watchyourwallet.model.Receipt;
+import com.group27.watchyourwallet.repository.DataRefreshManager;
 import com.group27.watchyourwallet.repository.ReceiptRepository;
 
 public class ReviewReceiptActivity extends BaseActivity {
@@ -77,11 +78,17 @@ public class ReviewReceiptActivity extends BaseActivity {
                     rawText
             );
 
+            receipt.setUserId("user_1");
+
             repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
                 @Override
                 public void onSuccess() {
                     runOnUiThread(() -> {
                         Toast.makeText(ReviewReceiptActivity.this, "Receipt saved!", Toast.LENGTH_SHORT).show();
+
+                        // TRIGGER DASHBOARD REFRESH
+                        DataRefreshManager.notifyDataChanged();
+
                         finish();
                     });
                 }

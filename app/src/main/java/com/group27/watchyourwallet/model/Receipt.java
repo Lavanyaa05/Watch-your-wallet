@@ -7,6 +7,7 @@ public class Receipt {
     private String category;
     private String date;
     private String rawText;
+    private String userId;
 
     // full constructor
     private Receipt (String storeName, double amount, String category,
@@ -17,7 +18,7 @@ public class Receipt {
         this.date = date;
         this.rawText = rawText;
     }
-
+    
     public static Receipt fromInputs(String storeName, String amountStr,
                                      String category, String date,
                                      String rawText) {
@@ -27,6 +28,13 @@ public class Receipt {
             amount = Double.parseDouble(amountStr.replace("$", ""));
         } catch (Exception ignored) {}
 
-        return new Receipt(storeName, amount, category, date, rawText);
+        Receipt receipt = new Receipt(storeName, amount, category, date, rawText);
+
+        receipt.setUserId("user_1");
+        return receipt;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#FAF7FB">
 
     <LinearLayout
@@ -105,6 +106,18 @@
             android:backgroundTint="@color/pastel_purple"
             android:text="Save Receipt"
             android:textColor="@color/dark_text" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_chatbot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/baseline_chat_24"
+            app:backgroundTint="#7C6BBF"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="24dp"
+            android:layout_marginEnd="24dp"/>
 
     </LinearLayout>
 </ScrollView>

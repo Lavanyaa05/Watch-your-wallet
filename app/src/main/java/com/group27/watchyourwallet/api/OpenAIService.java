@@ -40,6 +40,17 @@ public class OpenAIService {
         }
     }
 
+    public String chat(String userMessage) {
+        String prompt = "You are a helpful personal finance assistant. " +
+                "Help the user with questions about their spending and expenses.KEEP YOUR RESPONSE TO A MAXIMUM OF 100 WORDS\n" +
+                "User: " + userMessage;
+        try {
+            return makeRequest(prompt, 100, 0.0);
+        } catch (Exception e) {
+            Log.e(TAG, "Chat failed: " + e.getMessage());
+            return "Sorry, I couldn't process your message. Please try again.";
+        }
+    }
     private String makeRequest(String userMessage, int maxTokens, double temperature) throws Exception {
 
         // Build request JSON

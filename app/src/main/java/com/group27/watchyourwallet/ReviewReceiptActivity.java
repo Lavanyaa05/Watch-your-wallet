@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.group27.watchyourwallet.model.Receipt;
 import com.group27.watchyourwallet.repository.ReceiptRepository;
 
-public class ReviewReceiptActivity extends AppCompatActivity {
+public class ReviewReceiptActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

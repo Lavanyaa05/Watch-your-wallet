@@ -12,15 +12,19 @@ import java.util.Map;
 public interface ReceiptApi {
 
     // GET all receipts for a user
-    @GET("receipts/{userId}")
-    Call<List<Receipt>> getReceipts(@Path("userId") String userId);
+    @GET("receipts/user_1")
+    Call<List<Receipt>> getReceipts();
+
 
     // POST a new receipt
     @POST("receipts")
     Call<Void> saveReceipt(@Body Receipt receipt);
 
-    @GET("categoryTotals/{userId}")
-    Call<Map<String, Double>> getCategoryTotals(@Path("userId") String userId);
+    @GET("categoryTotals/user_1")
+    Call<Map<String, Double>> getCategoryTotals();
+
+    @GET("categoryTotal/user_1/{category}")
+    Call<Map<String, Object>> getCategoryTotal(@Path("category") String category);
 
     // POST a question to chatbot
     //@POST("receipts/filter")

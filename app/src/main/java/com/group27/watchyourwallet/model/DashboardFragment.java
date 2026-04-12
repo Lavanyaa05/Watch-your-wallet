@@ -1,7 +1,5 @@
 package com.group27.watchyourwallet.model;
 
-import static android.app.PendingIntent.getActivity;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,13 +17,11 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.group27.watchyourwallet.R;
-
 import com.group27.watchyourwallet.repository.ReceiptRepository;
 
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DashboardFragment extends Fragment {
 
@@ -33,7 +29,6 @@ public class DashboardFragment extends Fragment {
     private TextView tvTotal;
     private ReceiptRepository repository;
 
-    private static final String USER_ID = "user_1";
 
     @Nullable
     @Override
@@ -46,7 +41,7 @@ public class DashboardFragment extends Fragment {
         pieChart = view.findViewById(R.id.pieChart);
         tvTotal = view.findViewById(R.id.tvTotal);
 
-        repository = new ReceiptRepository("");
+        repository = new ReceiptRepository();
 
         loadData();
 
@@ -55,45 +50,34 @@ public class DashboardFragment extends Fragment {
 
     private void loadData() {
 
-        repository.getCategoryTotals(USER_ID,
-                new ReceiptRepository.OnCategoryTotalsListener() {
+        repository.getCategoryTotals(new ReceiptRepository.CategoryCallback() {
 
-                    @Override
-                    public void onSuccess(HashMap<String, Double> data) {
+            @Override
+            public void onSuccess(Map<String, Double> data) {
 
-                        if (getActivity() == null) return;
+                double total = 0;
+                List<PieEntry> entries = new ArrayList<>();
 
-                        getActivity().runOnUiThread(() -> {
+                for (String category : data.keySet()) {
+                    double amount = data.get(category);
+                    total += amount;
+                    entries.add(new PieEntry((float) amount, category));
+                }
 
-                            double total = 0;
-                            List<PieEntry> entries = new ArrayList<>();
+                tvTotal.setText("Total: $" + total);
 
-                            for (String category : data.keySet()) {
-                                double amount = data.get(category);
-                                total += amount;
-                                entries.add(new PieEntry((float) amount, category));
-                            }
+                PieDataSet dataSet = new PieDataSet(entries, "Spending");
+                dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
 
-                            tvTotal.setText("Total: $" + total);
+                PieData pieData = new PieData(dataSet);
+                pieChart.setData(pieData);
+                pieChart.invalidate();
+            }
 
-                            PieDataSet dataSet = new PieDataSet(entries, "Spending");
-                            dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
-
-                            PieData pieData = new PieData(dataSet);
-                            pieChart.setData(pieData);
-
-                            pieChart.invalidate(); // refresh
-                        });
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show()
-                            );
-                        }
-                    }
-                });
+            @Override
+            public void onFailure(Throwable t) {
+                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

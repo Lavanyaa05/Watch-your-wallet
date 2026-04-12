@@ -1,13 +1,12 @@
 package com.group27.watchyourwallet.repository;
 
-import com.group27.watchyourwallet.model.CategoryResponse;
 import com.group27.watchyourwallet.model.Receipt;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.group27.watchyourwallet.api.RetrofitClient;
 import com.group27.watchyourwallet.api.ReceiptApi;
@@ -17,6 +16,10 @@ public class ReceiptRepository {
     private ReceiptApi apiService;
 
     public ReceiptRepository(String mongodbUri) {
+        apiService = RetrofitClient.getClient().create(ReceiptApi.class);
+    }
+
+    public ReceiptRepository() {
         apiService = RetrofitClient.getClient().create(ReceiptApi.class);
     }
 
@@ -57,42 +60,34 @@ public class ReceiptRepository {
         });
     }
 
-    public static interface OnCategoryTotalsListener {
-        void onSuccess(HashMap<String, Double> data);
-
-        void onFailure(String error);
-
+    public interface CategoryCallback {
+        void onSuccess(Map<String, Double> data);
+        void onFailure(Throwable t);
     }
 
-    public void getCategoryTotals(String userId, OnCategoryTotalsListener listener) {
 
-        ReceiptApi api = RetrofitClient.getClient().create(ReceiptApi.class);
+    public void getCategoryTotals(CategoryCallback callback) {
 
-        api.getCategoryTotals(userId).enqueue(new Callback<List<CategoryResponse>>() {
+        apiService.getCategoryTotals().enqueue(new Callback<Map<String, Double>>() {
+
             @Override
-            public void onResponse(Call<List<CategoryResponse>> call,
-                                   Response<List<CategoryResponse>> response) {
+            public void onResponse(Call<Map<String, Double>> call,
+                                   Response<Map<String, Double>> response) {
 
                 if (response.isSuccessful() && response.body() != null) {
-
-                    HashMap<String, Double> map = new HashMap<>();
-
-                    for (CategoryResponse item : response.body()) {
-                        map.put(item._id, item.total);
-                    }
-
-                    listener.onSuccess(map);
+                    callback.onSuccess(response.body());
                 } else {
-                    listener.onFailure("Failed to load data");
+                    callback.onFailure(new Exception("Failed"));
                 }
             }
 
             @Override
-            public void onFailure(Call<List<CategoryResponse>> call, Throwable t) {
-                listener.onFailure(t.getMessage());
+            public void onFailure(Call<Map<String, Double>> call, Throwable t) {
+                callback.onFailure(t);
             }
         });
     }
+
 
     /*
     public void filterReceipts(Map<String, String> filters, OnReceiptsLoadedListener listener) {

@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="pastel_purple">#CDB4DB</color>
-    <color name="dark_text">#4A3F55</color>
-    <color name="hint_text">#9E9E9E</color>
+    <!-- Brand colors -->
+    <color name="purple_primary">#9C8FD9</color>
+    <color name="purple_dark">#7C6BBF</color>
+    <color name="purple_light">#EDE9FB</color>
+
+    <!-- Keep pastel_purple as alias so old layouts don't break -->
+    <color name="pastel_purple">#9C8FD9</color>
+
+    <!-- Text colors -->
+    <color name="dark_text">#1A1A1A</color>
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_muted">#888888</color>
+
+    <!-- UI colors -->
+    <color name="background_gray">#F5F5F7</color>
+    <color name="red_spent">#E05C5C</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Required by default Android theme -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
 </resources>

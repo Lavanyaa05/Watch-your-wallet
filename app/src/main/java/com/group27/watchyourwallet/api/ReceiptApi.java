@@ -19,6 +19,9 @@ public interface ReceiptApi {
     @POST("receipts")
     Call<Void> saveReceipt(@Body Receipt receipt);
 
+    @GET("categoryTotals/{userId}")
+    Call<Map<String, Double>> getCategoryTotals(@Path("userId") String userId);
+
     // POST a question to chatbot
     //@POST("receipts/filter")
     //Call<List<Receipt>> filterReceipts(@Body Map<String, String> filters);

@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.group27.watchyourwallet.model.Receipt;
@@ -19,23 +20,34 @@ public class ReviewReceiptActivity extends AppCompatActivity {
         setContentView(R.layout.activity_review_receipt);
 
         EditText editStoreName = findViewById(R.id.editStoreName);
-        EditText editAmount    = findViewById(R.id.editAmount);
-        Spinner editCategory   = findViewById(R.id.editCategory);
-        EditText editDate      = findViewById(R.id.editDate);
-        Button saveButton      = findViewById(R.id.saveButton);
+        EditText editAmount = findViewById(R.id.editAmount);
+        Spinner editCategory = findViewById(R.id.editCategory);
+        EditText editDate = findViewById(R.id.editDate);
+        Button saveButton = findViewById(R.id.saveButton);
 
-        // set up dropdown options
-        String[] categories = {"Food & Dining", "Transport", "Shopping", "Entertainment", "Uncategorised"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
+        String[] categories = {
+                "Food & Dining",
+                "Transport",
+                "Shopping",
+                "Entertainment",
+                "Uncategorised"
+        };
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                categories
+        );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         editCategory.setAdapter(adapter);
 
-        // pre-select the AI category
         String aiCategory = getIntent().getStringExtra("category");
-        for (int i = 0; i < categories.length; i++) {
-            if (categories[i].equalsIgnoreCase(aiCategory)) {
-                editCategory.setSelection(i);
-                break;
+        if (aiCategory != null) {
+            for (int i = 0; i < categories.length; i++) {
+                if (categories[i].equalsIgnoreCase(aiCategory)) {
+                    editCategory.setSelection(i);
+                    break;
+                }
             }
         }
 
@@ -44,17 +56,19 @@ public class ReviewReceiptActivity extends AppCompatActivity {
         editDate.setText(getIntent().getStringExtra("date"));
 
         saveButton.setOnClickListener(v -> {
-            String storeName = editStoreName.getText().toString();
-            String amount    = editAmount.getText().toString();
-            String category  = editCategory.getSelectedItem().toString();
-            String date      = editDate.getText().toString();
+            String storeName = editStoreName.getText().toString().trim();
+            String amount = editAmount.getText().toString().trim();
+            String category = editCategory.getSelectedItem().toString();
+            String date = editDate.getText().toString().trim();
 
-            // Saving the data to MongoDB
+            if (storeName.isEmpty() || amount.isEmpty() || date.isEmpty()) {
+                Toast.makeText(ReviewReceiptActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             ReceiptRepository repository = new ReceiptRepository("");
-            String userId = "user_1";
-
-            // Get raw OCR text passed from MainActivity
             String rawText = getIntent().getStringExtra("rawText");
+
             Receipt receipt = Receipt.fromInputs(
                     storeName,
                     amount,
@@ -62,6 +76,7 @@ public class ReviewReceiptActivity extends AppCompatActivity {
                     date,
                     rawText
             );
+
             repository.saveReceipt(receipt, new ReceiptRepository.OnCompleteListener() {
                 @Override
                 public void onSuccess() {
@@ -70,9 +85,16 @@ public class ReviewReceiptActivity extends AppCompatActivity {
                         finish();
                     });
                 }
+
                 @Override
                 public void onFailure(String error) {
-                    runOnUiThread(() -> Toast.makeText(ReviewReceiptActivity.this, "Failed to save: " + error, Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() ->
+                            Toast.makeText(
+                                    ReviewReceiptActivity.this,
+                                    "Failed to save: " + error,
+                                    Toast.LENGTH_SHORT
+                            ).show()
+                    );
                 }
             });
         });

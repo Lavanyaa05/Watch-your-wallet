@@ -20,32 +20,32 @@
         android:theme="@style/Theme.WatchYourWallet"
         android:usesCleartextTraffic="true">
 
-        <!-- Profile -->
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-
-        <!-- Scan page -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <!-- Review page -->
-        <activity
-            android:name=".ReviewReceiptActivity"
-            android:exported="false" />
-
         <!-- Home (LAUNCHER) -->
         <activity
             android:name=".HomeActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.WatchYourWallet.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".ChatbotActivity" android:exported="false"/>
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ReviewReceiptActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChatbotActivity"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

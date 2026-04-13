@@ -8,4 +8,11 @@
 
     <style name="Theme.WatchYourWallet" parent="Base.Theme.WatchYourWallet" />
 
+    <style name="Theme.WatchYourWallet.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenIconBackgroundColor">#FFFFFF</item>
+        <item name="postSplashScreenTheme">@style/Theme.WatchYourWallet</item>
+    </style>
+
 </resources>

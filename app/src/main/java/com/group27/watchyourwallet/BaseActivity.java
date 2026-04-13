@@ -27,7 +27,18 @@ public class BaseActivity extends AppCompatActivity {
         if (fab != null) {  // ← check FIRST
             fab.setImageTintList(ColorStateList.valueOf(Color.WHITE));  // ← then use it
             fab.setOnClickListener(v -> {
+
                 Intent intent = new Intent(this, ChatbotActivity.class);
+
+                if (this instanceof HomeActivity) {
+                    HomeActivity home = (HomeActivity) this;
+
+                    String json = new com.google.gson.Gson()
+                            .toJson(home.getAllTransactions());
+
+                    intent.putExtra("transactions", json);
+                }
+
                 startActivity(intent);
             });
         }

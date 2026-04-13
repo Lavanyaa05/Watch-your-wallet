@@ -37,4 +37,17 @@ public class Receipt {
     public void setUserId(String userId) {
         this.userId = userId;
     }
+
+    public String getStoreName() {
+        return storeName;
+    }
+    public double getAmount() {
+        return amount;
+    }
+    public String getCategory() {
+        return category;
+    }
+    public String getDate() {
+        return date;
+    }
 }

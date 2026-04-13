@@ -51,6 +51,7 @@ public class OpenAIService {
             return "Sorry, I couldn't process your message. Please try again.";
         }
     }
+
     private String makeRequest(String userMessage, int maxTokens, double temperature) throws Exception {
 
         // Build request JSON
@@ -120,32 +121,26 @@ public class OpenAIService {
         return "Uncategorised";
     }
 
-    /*
-    public String extractFilters(String userQuery) {
+    public String extractIntent(String userMessage) {
 
-        String prompt = "You are a financial assistant. " +
-                "Extract filters from this user query and return ONLY JSON. " +
-                "Fields: storeName, category, date. " +
-
-                "Categories must be one of: Food & Dining, Transport, Beauty & Wellness, Groceries, Shopping, Entertainment. " +
-
-                "If not present, return null.\n\n" +
-
-                "Examples:\n" +
-                "Input: Show me Starbucks purchases\n" +
-                "Output: {\"storeName\":\"Starbucks\",\"category\":null,\"date\":null}\n\n" +
-
-                "Input: food last week\n" +
-                "Output: {\"storeName\":null,\"category\":\"Food & Dining\",\"date\":\"last_week\"}\n\n" +
-
-                "User query: " + userQuery;
+        String prompt =
+                "Extract structured spending query info as JSON ONLY.\n" +
+                        "Fields:\n" +
+                        "- category (Food & Dining, Transport, Shopping, Entertainment or null)\n" +
+                        "- period (ALL_TIME, THIS_MONTH, LAST_MONTH, THIS_WEEK or null)\n" +
+                        "- year (integer like 2025 or null)\n\n" +
+                        "Return ONLY JSON, no explanation.\n\n" +
+                        "Example:\n" +
+                        "Input: how much did I spend on food in 2026\n" +
+                        "Output: {\"category\":\"Food & Dining\",\"period\":null,\"year\":2026}\n\n" +
+                        "Input: transport last month\n" +
+                        "Output: {\"category\":\"Transport\",\"period\":\"LAST_MONTH\",\"year\":null}\n\n" +
+                        "User: " + userMessage;
 
         try {
-            return makeRequest(prompt, 100, 0.0);
+            return makeRequest(prompt, 50, 0.0);
         } catch (Exception e) {
             return "{}";
         }
     }
-
-     */
 }

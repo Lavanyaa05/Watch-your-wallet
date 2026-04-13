@@ -89,6 +89,8 @@ public class ReceiptRepository {
     }
 
 
+
+
     /*
     public void filterReceipts(Map<String, String> filters, OnReceiptsLoadedListener listener) {
         apiService.filterReceipts(filters).enqueue(new Callback<List<Receipt>>() {

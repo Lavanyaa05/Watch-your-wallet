@@ -78,8 +78,8 @@
                     <!-- Donut Chart -->
                     <com.github.mikephil.charting.charts.PieChart
                         android:id="@+id/pieChart"
-                        android:layout_width="220dp"
-                        android:layout_height="220dp"/>
+                        android:layout_width="match_parent"
+                        android:layout_height="300dp"/>
 
                     <!-- Budget stats row -->
                     <LinearLayout
@@ -196,6 +196,50 @@
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- TRANSACTIONS HEADER -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:text="Transactions"
+                    android:textSize="17sp"
+                    android:textColor="#1A1A1A"
+                    android:textStyle="bold"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+            <!-- TRANSACTION FILTER -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:tabMode="scrollable"
+                app:tabGravity="start"/>
+
+            <!-- TRANSACTION LIST CONTAINER -->
+            <LinearLayout
+                android:id="@+id/transactionContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"/>
+
+            <!-- SEE ALL BUTTON -->
+            <Button
+                android:id="@+id/btnSeeAll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="See All"/>
 
             <!-- LATEST NEWS HEADER -->
             <LinearLayout

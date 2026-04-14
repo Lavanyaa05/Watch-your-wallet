@@ -268,12 +268,17 @@
                     android:layout_height="wrap_content"/>
             </LinearLayout>
 
+
             <!-- NEWS CARD 1 -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/newsCard1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="12dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="#FFFFFF">
@@ -289,7 +294,7 @@
                         android:layout_width="72dp"
                         android:layout_height="72dp"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/ic_launcher_background"
+                        android:src="@drawable/news1"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -327,10 +332,14 @@
 
             <!-- NEWS CARD 2 -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/newsCard2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="12dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="#FFFFFF">
@@ -346,7 +355,7 @@
                         android:layout_width="72dp"
                         android:layout_height="72dp"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/ic_launcher_background"
+                        android:src="@drawable/news2"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout

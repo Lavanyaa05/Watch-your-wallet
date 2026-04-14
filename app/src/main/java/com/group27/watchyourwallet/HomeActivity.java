@@ -328,7 +328,7 @@ public class HomeActivity extends BaseActivity {
             name.setText(t.storeName);
             amount.setText("$" + String.format("%.2f", t.amount));
 
-            container.addView(view);
+            container.addView(view, 0);
         }
     }
 

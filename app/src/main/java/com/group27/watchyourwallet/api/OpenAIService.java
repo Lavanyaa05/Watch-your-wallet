@@ -123,23 +123,52 @@ public class OpenAIService {
 
     public String extractIntent(String userMessage) {
 
-        String prompt =
-                "Extract structured spending query info as JSON ONLY.\n" +
-                        "Fields:\n" +
-                        "- category (Food & Dining, Transport, Shopping, Entertainment or null)\n" +
-                        "- period (ALL_TIME, THIS_MONTH, LAST_MONTH, THIS_WEEK or null)\n" +
-                        "- year (integer like 2025 or null)\n\n" +
-                        "Return ONLY JSON, no explanation.\n\n" +
-                        "Example:\n" +
-                        "Input: how much did I spend on food in 2026\n" +
-                        "Output: {\"category\":\"Food & Dining\",\"period\":null,\"year\":2026}\n\n" +
-                        "Input: transport last month\n" +
-                        "Output: {\"category\":\"Transport\",\"period\":\"LAST_MONTH\",\"year\":null}\n\n" +
-                        "User: " + userMessage;
+        final String prompt =
+                "You are an intent classifier for a personal finance app. " +
+                        "Given a user message, respond ONLY with a valid JSON object. No explanation, no markdown.\n\n" +
+
+                        "JSON fields:\n" +
+                        "- type: \"DATA_QUERY\" if the user is asking about their own spending/transactions, " +
+                        "  otherwise \"GENERAL_ADVICE\"\n" +
+                        "- category: spending category if mentioned (e.g. \"Food & Dining\", \"Shopping\", \"Transport\", " +
+                        "  \"Entertainment\") — null if not mentioned\n" +
+                        "- period: \"THIS_MONTH\", \"LAST_MONTH\", \"THIS_YEAR\", or null if no time period mentioned\n" +
+                        "- merchant: specific store or brand name if mentioned (e.g. \"Sephora\", \"Starbucks\", " +
+                        "  \"Netflix\") — null if not mentioned\n\n" +
+
+                        "Examples:\n" +
+                        "User: \"how much did i spend on shopping\" → " +
+                        "{\"type\":\"DATA_QUERY\",\"category\":\"Shopping\",\"period\":null,\"merchant\":null}\n" +
+
+                        "User: \"how much did i spend in 2026\" → " +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"period\":\"THIS_YEAR\",\"merchant\":null}\n" +
+
+                        "User: \"how much did i spend on sephora\" → " +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"period\":null,\"merchant\":\"Sephora\"}\n" +
+
+                        "User: \"how much did i spend on food this month\" → " +
+                        "{\"type\":\"DATA_QUERY\",\"category\":\"Food & Dining\",\"period\":\"THIS_MONTH\",\"merchant\":null}\n" +
+
+                        "User: \"how should i save more money\" → " +
+                        "{\"type\":\"GENERAL_ADVICE\",\"category\":null,\"period\":null,\"merchant\":null}\n\n" +
+
+                        // ✅ THE FIX: append the actual user message here
+                        "Now classify this message:\n" +
+                        "User: \"" + userMessage + "\"";
 
         try {
-            return makeRequest(prompt, 50, 0.0);
+            String raw = makeRequest(prompt, 80, 0.0);
+
+            // Strip markdown code fences if model wraps response in ```json ... ```
+            raw = raw.trim();
+            if (raw.startsWith("```")) {
+                raw = raw.replaceAll("```json", "").replaceAll("```", "").trim();
+            }
+
+            return raw;
+
         } catch (Exception e) {
+            Log.e(TAG, "extractIntent failed: " + e.getMessage());
             return "{}";
         }
     }

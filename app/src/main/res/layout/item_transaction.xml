@@ -1,35 +1,40 @@
-<androidx.cardview.widget.CardView android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="#FFFFFF"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="14dp"
         android:orientation="horizontal"
+        android:padding="14dp"
         android:gravity="center_vertical">
 
+        <!-- LEFT SIDE: Store name -->
         <TextView
             android:id="@+id/tv_name"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Starbucks"
+            android:text="Store Name"
             android:textSize="15sp"
             android:textColor="#1A1A1A"
-            android:layout_height="wrap_content"/>
+            android:textStyle="bold"/>
 
+        <!-- RIGHT SIDE: Amount -->
         <TextView
             android:id="@+id/tv_amount"
-            android:text="$22.10"
-            android:textStyle="bold"
-            android:textSize="14sp"
-            android:textColor="#1A1A1A"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textSize="14sp"
+            android:textColor="#E05C5C"/>
+
     </LinearLayout>
+
 </androidx.cardview.widget.CardView>

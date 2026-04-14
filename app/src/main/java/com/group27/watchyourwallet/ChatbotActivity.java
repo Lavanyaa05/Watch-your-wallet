@@ -17,6 +17,7 @@ import com.group27.watchyourwallet.model.Transaction;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -115,7 +116,10 @@ public class ChatbotActivity extends AppCompatActivity {
 
     private String handleDataQuery(QueryIntent intent) {
         double total = 0;
-        LinkedHashMap<String, Double> breakdown = new LinkedHashMap<>();
+        LocalDate now = LocalDate.now();
+
+        // Each row: { storeName, amount, date }
+        List<Object[]> matchedRows = new ArrayList<>();
 
         for (Transaction t : allTransactions) {
             if (t == null) continue;
@@ -123,71 +127,159 @@ public class ChatbotActivity extends AppCompatActivity {
             LocalDate date = parseDate(t.date);
             if (date == null) continue;
 
-            // --- Category filter (fuzzy: "Food & Dining" matches "Food", "food", etc.) ---
+            // ── Category filter (null = ALL categories) ───────────────────────
             boolean matchCategory = true;
-            if (intent.category != null && !intent.category.isEmpty() && t.category != null) {
-                String intentCat = intent.category.toLowerCase();
-                String transCat  = t.category.toLowerCase();
-                // Match if either contains the other (handles "Food & Dining" vs "Food")
-                matchCategory = transCat.contains(intentCat) || intentCat.contains(transCat);
-            } else if (intent.category != null && !intent.category.isEmpty() && t.category == null) {
-                matchCategory = false;
+            if (intent.category != null && !intent.category.isEmpty()) {
+                if (t.category == null) {
+                    matchCategory = false;
+                } else {
+                    String ic = intent.category.toLowerCase();
+                    String tc = t.category.toLowerCase();
+                    matchCategory = tc.contains(ic) || ic.contains(tc);
+                }
             }
 
-            // --- Merchant / store filter ---
+            // ── Merchant filter ───────────────────────────────────────────────
             boolean matchMerchant =
-                    intent.merchant == null ||
-                            intent.merchant.isEmpty() ||
+                    intent.merchant == null || intent.merchant.isEmpty() ||
                             (t.storeName != null &&
                                     t.storeName.toLowerCase().contains(intent.merchant.toLowerCase()));
 
-            // --- Time period filter ---
+            // ── Time filter ───────────────────────────────────────────────────
             boolean matchTime = true;
-            if ("THIS_MONTH".equals(intent.period)) {
-                LocalDate now = LocalDate.now();
-                matchTime = date.getMonth() == now.getMonth()
-                        && date.getYear() == now.getYear();
+            String period = (intent.period == null) ? "ALL_TIME" : intent.period;
 
-            } else if ("LAST_MONTH".equals(intent.period)) {
-                LocalDate now = LocalDate.now();
-                LocalDate last = now.minusMonths(1);
-                matchTime = date.getMonth() == last.getMonth()
-                        && date.getYear() == last.getYear();
-
-            } else if ("THIS_YEAR".equals(intent.period)) {
-                matchTime = date.getYear() == LocalDate.now().getYear();
+            switch (period) {
+                case "THIS_WEEK": {
+                    LocalDate monday = now.with(DayOfWeek.MONDAY);
+                    LocalDate sunday = monday.plusDays(6);
+                    matchTime = !date.isBefore(monday) && !date.isAfter(sunday);
+                    break;
+                }
+                case "LAST_WEEK": {
+                    LocalDate monday = now.with(DayOfWeek.MONDAY).minusWeeks(1);
+                    LocalDate sunday = monday.plusDays(6);
+                    matchTime = !date.isBefore(monday) && !date.isAfter(sunday);
+                    break;
+                }
+                case "THIS_MONTH": {
+                    matchTime = date.getMonth() == now.getMonth()
+                            && date.getYear() == now.getYear();
+                    break;
+                }
+                case "LAST_MONTH": {
+                    LocalDate last = now.minusMonths(1);
+                    matchTime = date.getMonth() == last.getMonth()
+                            && date.getYear() == last.getYear();
+                    break;
+                }
+                case "THIS_YEAR": {
+                    matchTime = date.getYear() == now.getYear();
+                    break;
+                }
+                case "LAST_YEAR": {
+                    matchTime = date.getYear() == now.getYear() - 1;
+                    break;
+                }
+                case "SPECIFIC_YEAR": {
+                    if (intent.year > 0) matchTime = date.getYear() == intent.year;
+                    break;
+                }
+                case "SPECIFIC_MONTH": {
+                    boolean monthOk = (intent.month <= 0) || date.getMonthValue() == intent.month;
+                    boolean yearOk  = (intent.year  <= 0) || date.getYear()       == intent.year;
+                    matchTime = monthOk && yearOk;
+                    break;
+                }
+                case "ALL_TIME":
+                default:
+                    matchTime = true;
+                    break;
             }
 
             if (matchCategory && matchMerchant && matchTime) {
                 total += t.amount;
                 String store = (t.storeName == null || t.storeName.isEmpty())
                         ? "Unknown" : t.storeName;
-                breakdown.merge(store, t.amount, Double::sum);
+                matchedRows.add(new Object[]{ store, t.amount, date });
             }
         }
 
-        if (breakdown.isEmpty()) {
+        if (matchedRows.isEmpty()) {
             return "No matching transactions found.";
         }
 
-        // Sort by amount descending
-        List<Map.Entry<String, Double>> entries = new ArrayList<>(breakdown.entrySet());
-        entries.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+        // Sort chronologically
+        matchedRows.sort((a, b) -> ((LocalDate) a[2]).compareTo((LocalDate) b[2]));
+
+        String period = (intent.period == null) ? "ALL_TIME" : intent.period;
+        boolean groupByMonth = "THIS_YEAR".equals(period)
+                || "LAST_YEAR".equals(period)
+                || "SPECIFIC_YEAR".equals(period);
+
+        boolean groupByDay = "THIS_MONTH".equals(period)
+                || "LAST_MONTH".equals(period)
+                || "SPECIFIC_MONTH".equals(period)
+                || "THIS_WEEK".equals(period)
+                || "LAST_WEEK".equals(period);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("You spent $")
-                .append(String.format("%.2f", total))
-                .append("\n\nBreakdown:");
+        sb.append("You spent $").append(String.format("%.2f", total));
 
-        for (Map.Entry<String, Double> e : entries) {
-            sb.append("\n• ")
-                    .append(e.getKey())
-                    .append(":  $")
-                    .append(String.format("%.2f", e.getValue()));
+        if (groupByMonth) {
+            // ── Group by month (e.g. year queries) ───────────────────────────
+            DateTimeFormatter monthFmt = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH);
+            LinkedHashMap<String, List<Object[]>> byMonth = new LinkedHashMap<>();
+
+            for (Object[] row : matchedRows) {
+                String key = ((LocalDate) row[2]).format(monthFmt);
+                byMonth.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+            }
+
+            for (Map.Entry<String, List<Object[]>> entry : byMonth.entrySet()) {
+                double monthTotal = 0;
+                for (Object[] row : entry.getValue()) monthTotal += (double) row[1];
+                sb.append("\n\n").append(entry.getKey())
+                        .append(" ($").append(String.format("%.2f", monthTotal)).append("):");
+                for (Object[] row : entry.getValue()) {
+                    sb.append("\n  • ").append(row[0])
+                            .append(":  $").append(String.format("%.2f", (double) row[1]));
+                }
+            }
+
+        } else if (groupByDay) {
+            // ── Group by date (e.g. month / week queries) ────────────────────
+            DateTimeFormatter dayFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
+            LinkedHashMap<LocalDate, List<Object[]>> byDay = new LinkedHashMap<>();
+
+            for (Object[] row : matchedRows) {
+                LocalDate d = (LocalDate) row[2];
+                byDay.computeIfAbsent(d, k -> new ArrayList<>()).add(row);
+            }
+
+            for (Map.Entry<LocalDate, List<Object[]>> entry : byDay.entrySet()) {
+                double dayTotal = 0;
+                for (Object[] row : entry.getValue()) dayTotal += (double) row[1];
+                sb.append("\n\n").append(entry.getKey().format(dayFmt))
+                        .append(" ($").append(String.format("%.2f", dayTotal)).append("):");
+                for (Object[] row : entry.getValue()) {
+                    sb.append("\n  • ").append(row[0])
+                            .append(":  $").append(String.format("%.2f", (double) row[1]));
+                }
+            }
+
+        } else {
+            // ── Flat list for merchant / all-time queries ─────────────────────
+            sb.append("\n\nBreakdown:");
+            for (Object[] row : matchedRows) {
+                sb.append("\n• ").append(row[0])
+                        .append(":  $").append(String.format("%.2f", (double) row[1]));
+            }
         }
 
         return sb.toString();
     }
+
 
     private void appendMessage(String message, boolean isUser) {
         messages.add(new ChatMessage(message, isUser));
@@ -197,15 +289,24 @@ public class ChatbotActivity extends AppCompatActivity {
 
     private LocalDate parseDate(String dateStr) {
         if (dateStr == null) return null;
+        // Handles "11 JAN 2026", "8 April 2026", "8 april 2026" etc.
+        String normalized = dateStr.trim().toLowerCase();
+        // Capitalize first letter of each word for month name matching
+        normalized = java.util.Arrays.stream(normalized.split(" "))
+                .map(w -> w.isEmpty() ? w : Character.toUpperCase(w.charAt(0)) + w.substring(1))
+                .collect(java.util.stream.Collectors.joining(" "));
+
         Locale locale = Locale.ENGLISH;
         DateTimeFormatter[] formats = new DateTimeFormatter[]{
-                DateTimeFormatter.ofPattern("d/M/yy", locale),
-                DateTimeFormatter.ofPattern("d/M/yyyy", locale),
-                DateTimeFormatter.ofPattern("d MMM yyyy", locale),
+                DateTimeFormatter.ofPattern("d/M/yy",      locale),
+                DateTimeFormatter.ofPattern("d/M/yyyy",    locale),
+                DateTimeFormatter.ofPattern("d MMM yyyy",  locale),   // "8 Apr 2026", "11 Jan 2026"
+                DateTimeFormatter.ofPattern("d MMMM yyyy", locale),   // "8 April 2026"
+                DateTimeFormatter.ofPattern("M/d/yyyy",    locale),
                 DateTimeFormatter.ISO_LOCAL_DATE
         };
         for (DateTimeFormatter f : formats) {
-            try { return LocalDate.parse(dateStr, f); }
+            try { return LocalDate.parse(normalized, f); }
             catch (Exception ignored) {}
         }
         return null;

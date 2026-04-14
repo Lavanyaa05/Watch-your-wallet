@@ -124,49 +124,59 @@ public class OpenAIService {
     public String extractIntent(String userMessage) {
 
         final String prompt =
-                "You are an intent classifier for a personal finance app. " +
+                "You are an intent classifier for a personal finance app. Today's date is " +
+                        java.time.LocalDate.now().toString() + ".\n" +
                         "Given a user message, respond ONLY with a valid JSON object. No explanation, no markdown.\n\n" +
 
                         "JSON fields:\n" +
-                        "- type: \"DATA_QUERY\" if the user is asking about their own spending/transactions, " +
-                        "  otherwise \"GENERAL_ADVICE\"\n" +
-                        "- category: spending category if mentioned (e.g. \"Food & Dining\", \"Shopping\", \"Transport\", " +
-                        "  \"Entertainment\") — null if not mentioned\n" +
-                        "- period: \"THIS_MONTH\", \"LAST_MONTH\", \"THIS_YEAR\", or null if no time period mentioned\n" +
-                        "- merchant: specific store or brand name if mentioned (e.g. \"Sephora\", \"Starbucks\", " +
-                        "  \"Netflix\") — null if not mentioned\n\n" +
+                        "- type: \"DATA_QUERY\" if asking about their own spending, otherwise \"GENERAL_ADVICE\"\n" +
+                        "- category: spending category if mentioned (\"Food & Dining\", \"Shopping\", \"Transport\", " +
+                        "  \"Entertainment\", \"Uncategorised\") — null if not mentioned (null = all categories)\n" +
+                        "- merchant: specific store/brand name if mentioned — null if not mentioned\n" +
+                        "- period: one of THIS_WEEK, LAST_WEEK, THIS_MONTH, LAST_MONTH, THIS_YEAR, LAST_YEAR, " +
+                        "  SPECIFIC_MONTH, SPECIFIC_YEAR, ALL_TIME — null means ALL_TIME\n" +
+                        "- month: integer 1-12 if a specific month is mentioned, else 0\n" +
+                        "- year: 4-digit year if a specific year is mentioned, else 0\n\n" +
+
+                        "Rules:\n" +
+                        "- \"this year\" or \"so far this year\" or \"in 2026\" (current year) → THIS_YEAR\n" +
+                        "- \"last year\" → LAST_YEAR\n" +
+                        "- \"in 2025\" or any past/future year → SPECIFIC_YEAR, year=that year\n" +
+                        "- \"in March\" → SPECIFIC_MONTH, month=3, year=0\n" +
+                        "- \"in March 2025\" → SPECIFIC_MONTH, month=3, year=2025\n" +
+                        "- \"this week\" → THIS_WEEK\n" +
+                        "- \"last week\" → LAST_WEEK\n" +
+                        "- \"this month\" → THIS_MONTH\n" +
+                        "- \"last month\" → LAST_MONTH\n" +
+                        "- No time mentioned → null (ALL_TIME)\n" +
+                        "- No category mentioned → null (means ALL categories, not just one)\n\n" +
 
                         "Examples:\n" +
-                        "User: \"how much did i spend on shopping\" → " +
-                        "{\"type\":\"DATA_QUERY\",\"category\":\"Shopping\",\"period\":null,\"merchant\":null}\n" +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"merchant\":null,\"period\":\"THIS_YEAR\",\"month\":0,\"year\":0}\n" +
+                        "← for: \"how much did i spend in 2026 so far\"\n\n" +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"merchant\":null,\"period\":\"LAST_WEEK\",\"month\":0,\"year\":0}\n" +
+                        "← for: \"what did i spend last week\"\n\n" +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"merchant\":null,\"period\":\"SPECIFIC_MONTH\",\"month\":3,\"year\":2025}\n" +
+                        "← for: \"how much did i spend in March 2025\"\n\n" +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"merchant\":null,\"period\":\"SPECIFIC_YEAR\",\"month\":0,\"year\":2025}\n" +
+                        "← for: \"how much did i spend in 2025\"\n\n" +
+                        "{\"type\":\"DATA_QUERY\",\"category\":\"Shopping\",\"merchant\":null,\"period\":\"LAST_MONTH\",\"month\":0,\"year\":0}\n" +
+                        "← for: \"how much did i spend on shopping last month\"\n\n" +
+                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"merchant\":\"Sephora\",\"period\":null,\"month\":0,\"year\":0}\n" +
+                        "← for: \"how much did i spend on sephora\"\n\n" +
+                        "{\"type\":\"GENERAL_ADVICE\",\"category\":null,\"merchant\":null,\"period\":null,\"month\":0,\"year\":0}\n" +
+                        "← for: \"how should i save more money\"\n\n" +
 
-                        "User: \"how much did i spend in 2026\" → " +
-                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"period\":\"THIS_YEAR\",\"merchant\":null}\n" +
-
-                        "User: \"how much did i spend on sephora\" → " +
-                        "{\"type\":\"DATA_QUERY\",\"category\":null,\"period\":null,\"merchant\":\"Sephora\"}\n" +
-
-                        "User: \"how much did i spend on food this month\" → " +
-                        "{\"type\":\"DATA_QUERY\",\"category\":\"Food & Dining\",\"period\":\"THIS_MONTH\",\"merchant\":null}\n" +
-
-                        "User: \"how should i save more money\" → " +
-                        "{\"type\":\"GENERAL_ADVICE\",\"category\":null,\"period\":null,\"merchant\":null}\n\n" +
-
-                        // ✅ THE FIX: append the actual user message here
                         "Now classify this message:\n" +
                         "User: \"" + userMessage + "\"";
 
         try {
-            String raw = makeRequest(prompt, 80, 0.0);
-
-            // Strip markdown code fences if model wraps response in ```json ... ```
+            String raw = makeRequest(prompt, 120, 0.0);
             raw = raw.trim();
             if (raw.startsWith("```")) {
                 raw = raw.replaceAll("```json", "").replaceAll("```", "").trim();
             }
-
             return raw;
-
         } catch (Exception e) {
             Log.e(TAG, "extractIntent failed: " + e.getMessage());
             return "{}";

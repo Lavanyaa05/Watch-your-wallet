@@ -1,6 +1,7 @@
 package com.group27.watchyourwallet;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,11 +20,11 @@ import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.tabs.TabLayout;
-import com.group27.watchyourwallet.model.FullTransactionActivity;
 import com.group27.watchyourwallet.model.Receipt;
 import com.group27.watchyourwallet.repository.DataRefreshManager;
 import com.group27.watchyourwallet.repository.ReceiptRepository;
 import com.group27.watchyourwallet.model.Transaction;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ public class HomeActivity extends BaseActivity {
     private PieChart pieChart;
     private ReceiptRepository repository;
     private static final String USER_ID = "user_1";
+    private static final int REQUEST_PROFILE = 101;
 
     private List<Transaction> allTransactions = new ArrayList<>();
     private String selectedCategory = "All";
@@ -59,9 +61,12 @@ public class HomeActivity extends BaseActivity {
                 finish();
                 return true;
             } else if (id == R.id.nav_profile) {
-                startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
+                // Use startActivityForResult so budget refreshes on return
+                startActivityForResult(
+                        new Intent(HomeActivity.this, ProfileActivity.class),
+                        REQUEST_PROFILE
+                );
                 overridePendingTransition(0, 0);
-                finish();
                 return true;
             }
             return false;
@@ -79,26 +84,50 @@ public class HomeActivity extends BaseActivity {
             refreshUI();
         });
 
-        // News Card 1 — replace the URL with your actual link
         CardView newsCard1 = findViewById(R.id.newsCard1);
         newsCard1.setOnClickListener(v -> {
-            String url = "https://cnalifestyle.channelnewsasia.com/advertorial/4-money-habits-adopt-your-first-salary-retirement-413161"; // REPLACE WITH YOUR URL
+            String url = "https://cnalifestyle.channelnewsasia.com/advertorial/4-money-habits-adopt-your-first-salary-retirement-413161";
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         });
 
-        // News Card 2 — replace the URL with your actual link
         CardView newsCard2 = findViewById(R.id.newsCard2);
         newsCard2.setOnClickListener(v -> {
-            String url = "https://www.dbs.com.sg/personal/deposits/bank-with-ease/protecting-yourself-online"; // REPLACE WITH YOUR URL
+            String url = "https://www.dbs.com.sg/personal/deposits/bank-with-ease/protecting-yourself-online";
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         });
     }
 
+    // loads budget and refreshes data
     @Override
     protected void onResume() {
         super.onResume();
+        loadAndDisplayBudget();
         DataRefreshManager.setListener(() -> loadRealData());
         loadRealData();
+    }
+
+    // Catches result when user saves budget in ProfileActivity and navigates back
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_PROFILE && resultCode == RESULT_OK) {
+            loadAndDisplayBudget();
+        }
+    }
+
+    // Reads from SharedPreferences and updates tv_monthly_budget
+    private void loadAndDisplayBudget() {
+        SharedPreferences prefs = getSharedPreferences("WYWPrefs", MODE_PRIVATE);
+        double budget = Double.longBitsToDouble(
+                prefs.getLong(ProfileActivity.KEY_MONTHLY_BUDGET,
+                        Double.doubleToLongBits(0.0)));
+
+        TextView tvBudget = findViewById(R.id.tv_monthly_budget); // ✅ correct ID from activity_home.xml
+        if (tvBudget != null) {
+            tvBudget.setText(budget > 0
+                    ? String.format("$%,.0f", budget)
+                    : "Not set");
+        }
     }
 
     private void loadRealData() {
@@ -111,6 +140,15 @@ public class HomeActivity extends BaseActivity {
                         return;
                     }
                     setupRealChart(data);
+
+                    // Update "Amount Spent" with real total
+                    double total = 0;
+                    for (double v : data.values()) total += v;
+                    final double finalTotal = total;
+                    TextView tvSpent = findViewById(R.id.tv_amount_spent);
+                    if (tvSpent != null) {
+                        tvSpent.setText(String.format("$%,.0f", finalTotal));
+                    }
 
                     loadTransactions();
                 });
@@ -147,12 +185,11 @@ public class HomeActivity extends BaseActivity {
         dataSet.setColors(colors);
         dataSet.setSliceSpace(4f);
         dataSet.setSelectionShift(8f);
-
         dataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
         dataSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
         dataSet.setValueTextSize(12f);
         dataSet.setValueTextColor(Color.BLACK);
-        dataSet.setValueFormatter(new com.github.mikephil.charting.formatter.PercentFormatter(pieChart));
+        dataSet.setValueFormatter(new PercentFormatter(pieChart));
 
         PieData pieData = new PieData(dataSet);
 
@@ -184,12 +221,9 @@ public class HomeActivity extends BaseActivity {
 
         com.github.mikephil.charting.components.Legend legend = pieChart.getLegend();
         legend.setEnabled(true);
-        legend.setVerticalAlignment(
-                com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM);
-        legend.setHorizontalAlignment(
-                com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER);
-        legend.setOrientation(
-                com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL);
+        legend.setVerticalAlignment(com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM);
+        legend.setHorizontalAlignment(com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER);
+        legend.setOrientation(com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL);
         legend.setDrawInside(false);
         legend.setTextSize(11f);
         legend.setTextColor(Color.parseColor("#1A1A1A"));
@@ -230,7 +264,6 @@ public class HomeActivity extends BaseActivity {
             if (receipts == null) return;
 
             List<Transaction> transactions = new ArrayList<>();
-
             for (Receipt r : receipts) {
                 transactions.add(new Transaction(
                         r.getStoreName(),
@@ -242,28 +275,20 @@ public class HomeActivity extends BaseActivity {
             transactions.sort((t1, t2) -> {
                 java.time.LocalDate d1 = parseDateSafe(t1.date);
                 java.time.LocalDate d2 = parseDateSafe(t2.date);
-
                 if (d1 == null || d2 == null) return 0;
-
                 return d2.compareTo(d1);
             });
 
             runOnUiThread(() -> {
-
                 allTransactions.clear();
                 allTransactions.addAll(transactions);
-
                 setupTabs();
-
                 selectedCategory = "Food & Dining";
-
                 TabLayout tabLayout = findViewById(R.id.tabLayout);
                 if (tabLayout.getTabCount() > 0) {
                     tabLayout.selectTab(tabLayout.getTabAt(0));
                 }
-
                 isFullView = false;
-
                 refreshUI();
             });
         });
@@ -273,7 +298,6 @@ public class HomeActivity extends BaseActivity {
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         selectedCategory = "Food & Dining";
         tabLayout.selectTab(tabLayout.getTabAt(0));
-
         tabLayout.clearOnTabSelectedListeners();
 
         if (tabLayout.getTabCount() == 0) {
@@ -291,54 +315,38 @@ public class HomeActivity extends BaseActivity {
                 isFullView = false;
                 refreshUI();
             }
-
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
     }
 
     private void refreshUI() {
-
         List<Transaction> filtered = getFilteredList();
-
-        List<Transaction> toShow;
-
-        if (isFullView) {
-            toShow = filtered;
-        } else {
-            toShow = filtered.size() > 5 ? filtered.subList(0, 5) : filtered;
-        }
-
+        List<Transaction> toShow = isFullView
+                ? filtered
+                : (filtered.size() > 5 ? filtered.subList(0, 5) : filtered);
         displayTransactions(toShow);
     }
 
     private List<Transaction> getFilteredList() {
-
         List<Transaction> filtered = new ArrayList<>();
-
         for (Transaction t : allTransactions) {
-
             if (t.category.equals(selectedCategory)) {
                 filtered.add(t);
             }
         }
-
         return filtered;
     }
 
     private void displayTransactions(List<Transaction> transactions) {
         LinearLayout container = findViewById(R.id.transactionContainer);
         container.removeAllViews();
-
         for (Transaction t : transactions) {
             View view = getLayoutInflater().inflate(R.layout.item_transaction, container, false);
-
             TextView name = view.findViewById(R.id.tv_name);
             TextView amount = view.findViewById(R.id.tv_amount);
-
             name.setText(t.storeName);
             amount.setText("$" + String.format("%.2f", t.amount));
-
             container.addView(view, 0);
         }
     }
@@ -348,10 +356,8 @@ public class HomeActivity extends BaseActivity {
     }
 
     private java.time.LocalDate parseDateSafe(String dateStr) {
-
         try {
-            java.time.format.DateTimeFormatter[] formats = new java.time.format.DateTimeFormatter[] {
-
+            java.time.format.DateTimeFormatter[] formats = new java.time.format.DateTimeFormatter[]{
                     java.time.format.DateTimeFormatter.ofPattern("d/M/yy"),
                     java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"),
                     java.time.format.DateTimeFormatter.ofPattern("M/d/yyyy"),
@@ -359,17 +365,11 @@ public class HomeActivity extends BaseActivity {
                     java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy"),
                     java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
             };
-
             for (java.time.format.DateTimeFormatter f : formats) {
-                try {
-                    return java.time.LocalDate.parse(dateStr, f);
-                } catch (Exception ignored) {}
+                try { return java.time.LocalDate.parse(dateStr, f); }
+                catch (Exception ignored) {}
             }
-
-        } catch (Exception e) {
-            return null;
-        }
-
+        } catch (Exception e) { return null; }
         return null;
     }
 

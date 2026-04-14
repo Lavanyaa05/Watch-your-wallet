@@ -2,12 +2,15 @@ package com.group27.watchyourwallet;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.cardview.widget.CardView;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
@@ -71,10 +74,23 @@ public class HomeActivity extends BaseActivity {
         loadRealData();
 
         Button seeAll = findViewById(R.id.btnSeeAll);
-
         seeAll.setOnClickListener(v -> {
             isFullView = true;
             refreshUI();
+        });
+
+        // News Card 1 — replace the URL with your actual link
+        CardView newsCard1 = findViewById(R.id.newsCard1);
+        newsCard1.setOnClickListener(v -> {
+            String url = "https://cnalifestyle.channelnewsasia.com/advertorial/4-money-habits-adopt-your-first-salary-retirement-413161"; // REPLACE WITH YOUR URL
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        });
+
+        // News Card 2 — replace the URL with your actual link
+        CardView newsCard2 = findViewById(R.id.newsCard2);
+        newsCard2.setOnClickListener(v -> {
+            String url = "https://www.dbs.com.sg/personal/deposits/bank-with-ease/protecting-yourself-online"; // REPLACE WITH YOUR URL
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         });
     }
 
@@ -132,7 +148,6 @@ public class HomeActivity extends BaseActivity {
         dataSet.setSliceSpace(4f);
         dataSet.setSelectionShift(8f);
 
-        // Percentages INSIDE slices — clean and simple
         dataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
         dataSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
         dataSet.setValueTextSize(12f);
@@ -141,7 +156,6 @@ public class HomeActivity extends BaseActivity {
 
         PieData pieData = new PieData(dataSet);
 
-        // Centre text
         android.text.SpannableString centerText = new android.text.SpannableString(
                 "SPENT\n$" + String.format("%.2f", total));
         centerText.setSpan(new android.text.style.RelativeSizeSpan(0.55f),
@@ -231,7 +245,7 @@ public class HomeActivity extends BaseActivity {
 
                 if (d1 == null || d2 == null) return 0;
 
-                return d2.compareTo(d1); // DESCENDING (latest first)
+                return d2.compareTo(d1);
             });
 
             runOnUiThread(() -> {
@@ -241,7 +255,6 @@ public class HomeActivity extends BaseActivity {
 
                 setupTabs();
 
-                // default category
                 selectedCategory = "Food & Dining";
 
                 TabLayout tabLayout = findViewById(R.id.tabLayout);
@@ -284,7 +297,6 @@ public class HomeActivity extends BaseActivity {
         });
     }
 
-
     private void refreshUI() {
 
         List<Transaction> filtered = getFilteredList();
@@ -313,7 +325,6 @@ public class HomeActivity extends BaseActivity {
 
         return filtered;
     }
-
 
     private void displayTransactions(List<Transaction> transactions) {
         LinearLayout container = findViewById(R.id.transactionContainer);
@@ -361,7 +372,6 @@ public class HomeActivity extends BaseActivity {
 
         return null;
     }
-
 
     @Override
     protected void onDestroy() {
